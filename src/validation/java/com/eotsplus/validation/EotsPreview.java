@@ -58,6 +58,7 @@ public final class EotsPreview {
         private final int animation;
         EntityEffect(ClientLevel level, EntityType<?> type, int animation) {
             this.entity = type.create(level);
+            this.entity.setId(1000);
             this.animation = animation;
             entity.setPos(0, 1, 0);
             if (entity instanceof EOTSSegment segment) {
@@ -74,6 +75,11 @@ public final class EotsPreview {
             }
         }
         @Override public void submit(PoseStack pose, MultiBufferSource buffers, Camera camera) {
+            com.mojang.blaze3d.platform.GlStateManager.setupLevelDiffuseLighting(
+                    new org.joml.Vector3f(0.2F, 1.0F, -0.7F).normalize(),
+                    new org.joml.Vector3f(-0.2F, 1.0F, 0.7F).normalize(),
+                    new org.joml.Matrix4f().rotationYXZ(1.0821041F, 3.2375858F, 0.0F)
+                            .rotateYXZ(-(float) Math.PI / 8F, 2.3561945F, 0.0F));
             Vec3 p = camera.getPosition();
             Minecraft.getInstance().getEntityRenderDispatcher().render(entity, entity.getX()-p.x, entity.getY()-p.y, entity.getZ()-p.z,
                     entity.getYRot(), 0, pose, buffers, LightTexture.FULL_BRIGHT);

@@ -1,133 +1,114 @@
-// 当前文件只保留最小的 NeoForge 开发、构建和运行配置。
 plugins {
     id 'java-library'
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.1.37'
+    id 'net.neoforged.moddev' version '2.0.147'
 }
 
 version = project.mod_version
 group = project.mod_group_id
-
-repositories {
-    mavenLocal()
-    maven { url = "https://api.modrinth.com/maven" }
-    maven { url = 'https://maven.neoforged.net/releases' }
-    maven {
-        url = 'https://www.cursemaven.com'
-        content {
-            includeGroup 'curse.maven'
-        }
-    }
-}
-
-base {
-    archivesName = "${project.mod_id}-${project.minecraft_version}-neoforge"
-}
-
+base { archivesName = "${project.mod_id}-${project.minecraft_version}-neoforge" }
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
-runs {
-    configureEach {
-        systemProperty 'forge.logging.markers', 'REGISTRIES'
-        systemProperty 'forge.logging.console.level', 'debug'
-        modSource project.sourceSets.main
-    }
-
-    client {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-    }
-
-    server {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-        arguments.add '--nogui'
-    }
-
-    gameTestServer {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-    }
-
-    data {
-        arguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-    }
-}
-
-sourceSets.main.resources { srcDir 'src/generated/resources' }
-
-dependencies {
-    implementation "net.neoforged:neoforge:${project.neo_version}"
-    implementation "maven.modrinth:deep-aether:${project.deep_aether_version}"
-    implementation "maven.modrinth:aether:${project.aether_version}"
-    compileOnly files("libs/nitrogen_internals-1.21.1-1.1.25-neoforge.jar")
-    runtimeOnly "maven.modrinth:owo-lib:NMCHU6DZ"
-
-}
-
-tasks.withType(ProcessResources).configureEach {
-    def replaceProperties = [
-            minecraft_version: project.minecraft_version,
-            minecraft_version_range: project.minecraft_version_range,
-            neo_version: project.neo_version,
-            neo_version_range: project.neo_version_range,
-            loader_version_range: project.loader_version_range,
-            mod_id: project.mod_id,
-            mod_name: project.mod_name,
-            mod_license: project.mod_license,
-            mod_version: project.mod_version,
-            mod_authors: project.mod_authors,
-            mod_description: project.mod_description
-    ]
-    inputs.properties replaceProperties
-
-    filesMatching(['META-INF/neoforge.mods.toml', 'pack.mcmeta']) {
-        expand replaceProperties
-    }
-}
-
-publishing {
-    publications {
-        register('mavenJava', MavenPublication) {
-            from components.java
-        }
-    }
-    repositories {
-        maven {
-            url "file://${project.projectDir}/repo"
-        }
-    }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
+repositories {
+    def localRepository = mavenLocal()
+    remove(localRepository)
+    addFirst(localRepository)
+    maven { url = 'https://api.modrinth.com/maven' }
 }
 
 sourceSets {
+    main.resources { srcDir 'src/generated/resources' }
     validation {
         compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
         runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
     }
 }
 
-if (project.hasProperty('validateMigration')) {
-    runs.configureEach {
-        modSource project.sourceSets.validation
+neoForge {
+    enable {
+        version = project.neo_version
+        disableRecompilation = true
     }
-    runs.gameTestServer {
-        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+    addModdingDependenciesTo sourceSets.validation
+    mods {
+        eotsplus {
+            sourceSet sourceSets.main
+            if (project.hasProperty('validateMigration')) sourceSet sourceSets.validation
+        }
+    }
+    runs {
+        configureEach {
+            logLevel = org.slf4j.event.Level.INFO
+            if (project.hasProperty('validateMigration')) sourceSet = sourceSets.validation
+        }
+        client {
+            client()
+            gameDirectory = project.file('runs/client')
+            if (project.hasProperty('renderPreviewJar')) {
+                systemProperty 'render_preview.open', 'true'
+                systemProperty 'render_preview.httpPort', project.findProperty('previewPort') ?: '18781'
+                if (project.hasProperty('previewOutput')) systemProperty 'render_preview.outputDir', project.property('previewOutput')
+            }
+        }
+        server {
+            server()
+            programArgument '--nogui'
+            gameDirectory = project.file('runs/server')
+        }
+        gameTestServer {
+            type = 'gameTestServer'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            gameDirectory = project.file('runs/gameTestServer')
+        }
+        data {
+            data()
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources').absolutePath, '--existing', file('src/main/resources').absolutePath
+            gameDirectory = project.file('runs/data')
+        }
     }
 }
 
-if (project.hasProperty('renderPreviewJar')) {
-    dependencies {
+dependencies {
+    implementation "maven.modrinth:deep-aether:${project.deep_aether_version}"
+    implementation "maven.modrinth:aether:${project.aether_version}"
+    compileOnly files('libs/nitrogen_internals-1.21.1-1.1.25-neoforge.jar')
+    runtimeOnly 'maven.modrinth:owo-lib:NMCHU6DZ'
+    if (project.hasProperty('renderPreviewJar')) {
         validationCompileOnly files(project.property('renderPreviewJar'))
         runtimeOnly files(project.property('renderPreviewJar'))
-    }
-    runs.client {
-        systemProperty 'render_preview.open', 'true'
     }
 }
 
 if (!project.hasProperty('renderPreviewJar')) {
     sourceSets.validation.java.exclude '**/EotsPreview.java'
 }
+
+def metadataProperties = new Properties()
+file('gradle.properties').withReader('UTF-8') { metadataProperties.load(it) }
+
+tasks.withType(ProcessResources).configureEach {
+    def replaceProperties = [
+        minecraft_version: project.minecraft_version,
+        minecraft_version_range: project.minecraft_version_range,
+        neo_version: project.neo_version,
+        neo_version_range: project.neo_version_range,
+        loader_version_range: project.loader_version_range,
+        mod_id: project.mod_id,
+        mod_name: project.mod_name,
+        mod_license: project.mod_license,
+        mod_version: project.mod_version,
+        mod_authors: project.mod_authors,
+        mod_description: metadataProperties.getProperty('mod_description')
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/neoforge.mods.toml', 'pack.mcmeta']) { expand replaceProperties }
+}
+
+publishing {
+    publications { register('mavenJava', MavenPublication) { from components.java } }
+    repositories { maven { url = layout.buildDirectory.dir('repo') } }
+}
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }

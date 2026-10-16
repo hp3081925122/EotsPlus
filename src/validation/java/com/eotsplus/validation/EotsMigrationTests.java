@@ -33,6 +33,8 @@ public final class EotsMigrationTests {
         tests.add(new TestFunction("eotsplus", "eotsplus.damage_resistance_packet", "eotsplus:empty", 40, 0L, true, EotsMigrationTests::fundamentals));
         tests.add(new TestFunction("eotsplus", "eotsplus.phase_thresholds", "eotsplus:empty", 80, 0L, true, EotsMigrationTests::phases));
         tests.add(new TestFunction("eotsplus", "eotsplus.boss_start_chain", "eotsplus:empty", 80, 0L, true, EotsMigrationTests::bossStart));
+        tests.add(new TestFunction("eotsplus", "eotsplus.shield_cooldown", "eotsplus:empty", 40, 0L, true, EotsMigrationTests::shield));
+        tests.add(new TestFunction("eotsplus", "eotsplus.projectile_nbt", "eotsplus:empty", 40, 0L, true, EotsMigrationTests::projectiles));
         return tests;
     }
 
@@ -75,6 +77,48 @@ public final class EotsMigrationTests {
             target.invulnerableTime = 0;
             skill.tickSkill();
         });
+    }
+
+    private static void shield(GameTestHelper helper) {
+        var head = helper.spawn(DAEntities.EOTS_SEGMENT.get(), new BlockPos(8, 5, 8));
+        head.setNoAi(true);
+        var player = helper.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.SHIELD));
+        player.startUsingItem(net.minecraft.world.InteractionHand.MAIN_HAND);
+        try {
+            var method = EOTSSegment.class.getDeclaredMethod("blockedByShield", LivingEntity.class);
+            method.setAccessible(true);
+            method.invoke(head, player);
+        } catch (ReflectiveOperationException error) {
+            throw new IllegalStateException(error);
+        }
+        helper.assertTrue(player.getCooldowns().isOnCooldown(net.minecraft.world.item.Items.SHIELD), "Shield cooldown was not applied");
+        for (int i = 0; i < EotsConfig.SHIELD_COOLDOWN_TICKS.get()-1; i++) player.getCooldowns().tick();
+        helper.assertTrue(player.getCooldowns().isOnCooldown(net.minecraft.world.item.Items.SHIELD), "Shield cooldown ended early");
+        player.getCooldowns().tick();
+        helper.assertTrue(!player.getCooldowns().isOnCooldown(net.minecraft.world.item.Items.SHIELD), "Shield cooldown did not use configured duration");
+        head.discard();
+        helper.succeed();
+    }
+
+    private static void projectiles(GameTestHelper helper) {
+        for (var type : List.of(com.eotsplus.entity.EotsEntities.GALE_ORB.get(), com.eotsplus.entity.EotsEntities.GALE_SHARD.get(),
+                com.eotsplus.entity.EotsEntities.GALE_CRESCENT.get(), com.eotsplus.entity.EotsEntities.GALE_TORNADO.get())) {
+            Entity original = type.create(helper.getLevel());
+            Entity restored = type.create(helper.getLevel());
+            original.setPos(helper.absoluteVec(new Vec3(10, 4, 10)));
+            original.setDeltaMovement(0.2, 0.1, 0.3);
+            var tag = new net.minecraft.nbt.CompoundTag();
+            original.saveWithoutId(tag);
+            restored.load(tag);
+            var second = new net.minecraft.nbt.CompoundTag();
+            restored.saveWithoutId(second);
+            helper.assertTrue(tag.equals(second), "Projectile NBT roundtrip failed: " + type);
+            helper.assertTrue(restored.getDeltaMovement().distanceTo(original.getDeltaMovement()) < 1.0E-6, "Projectile velocity was lost");
+            original.discard();
+            restored.discard();
+        }
+        helper.succeed();
     }
 
     private static void bossStart(GameTestHelper helper) {
