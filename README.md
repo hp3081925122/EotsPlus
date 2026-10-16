@@ -5,7 +5,7 @@ Deep Aether 的风暴之眼 Boss 强化附属模组。加入三阶段战斗、10
 ## 版本
 
 - `1201forge`：Minecraft 1.20.1，Forge，Java 17。
-- `1211neoforge`：Minecraft 1.21.1，NeoForge，Java 21，迁移进度见迁移文档。
+- `1211neoforge`：Minecraft 1.21.1，NeoForge，Java 21，已完成迁移，记录见 [迁移与验证文档](MIGRATION_1211_NEOFORGE.md)。
 
 ## 功能
 
@@ -15,7 +15,7 @@ Deep Aether 的风暴之眼 Boss 强化附属模组。加入三阶段战斗、10
 
 ## 构建
 
-使用对应版本的 JDK 执行 `./gradlew build`。构建成功不代表所有技能或客户端渲染均已实测。
+使用对应版本的 JDK 执行 `./gradlew build`。1.21.1 使用 NeoForge 21.1.251 / ModDevGradle 2.0.147，开发依赖坐标固定在构建配置中。`./gradlew runGameTestServer -PvalidateMigration` 可执行独立服务端迁移测试；验证源码不会进入正式 JAR。
 
 CurseForge：https://www.curseforge.com/minecraft/mc-mods/eye-of-the-storm-plus
 
