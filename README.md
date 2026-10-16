@@ -5,7 +5,7 @@ Deep Aether 的风暴之眼 Boss 强化附属模组。加入三阶段战斗、10
 ## 版本
 
 - `1201forge`：Minecraft 1.20.1，Forge，Java 17。
-- `1211neoforge`：Minecraft 1.21.1，NeoForge，Java 21，迁移进度见迁移文档。
+- `1211neoforge`：Minecraft 1.21.1，NeoForge，Java 21，已完成迁移与服务端/渲染验证，见 [迁移文档](https://github.com/hp3081925122/EotsPlus/blob/1211neoforge/MIGRATION_1211_NEOFORGE.md)。
 
 ## 功能
 
