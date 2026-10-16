@@ -6,8 +6,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.entity.EntityTypeTest;
-import teamrazor.deepaether.entity.eots.EOTSController;
-import teamrazor.deepaether.entity.eots.EOTSSegment;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSController;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSSegment;
 
 import java.util.EnumMap;
 import java.util.HashMap;

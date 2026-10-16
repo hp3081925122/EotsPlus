@@ -13,7 +13,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.ForgeEventFactory;
+import net.neoforged.neoforge.event.EventHooks;
 
 public class GaleShard extends Projectile {
     private float damage;
@@ -36,7 +36,7 @@ public class GaleShard extends Projectile {
     }
 
     @Override
-    protected void defineSynchedData() {
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
     }
 
     @Override
@@ -45,7 +45,7 @@ public class GaleShard extends Projectile {
         Vec3 vel = this.getDeltaMovement();
         if (!this.level().isClientSide()) {
             HitResult hit = ProjectileUtil.getHitResultOnMoveVector(this, this::canHitEntity);
-            if (hit.getType() != HitResult.Type.MISS && !ForgeEventFactory.onProjectileImpact(this, hit)) {
+            if (hit.getType() != HitResult.Type.MISS && !EventHooks.onProjectileImpact(this, hit)) {
                 this.onHit(hit);
                 if (this.isRemoved()) {
                     return;

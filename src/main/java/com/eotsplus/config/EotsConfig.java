@@ -1,73 +1,73 @@
 package com.eotsplus.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class EotsConfig {
-    public static final ForgeConfigSpec SPEC;
+    public static final ModConfigSpec SPEC;
 
-    public static final ForgeConfigSpec.BooleanValue ENABLED;
-    public static final ForgeConfigSpec.BooleanValue ENHANCE_SUMMONED;
-    public static final ForgeConfigSpec.DoubleValue SEGMENT_HEALTH;
-    public static final ForgeConfigSpec.DoubleValue ATTACK_DAMAGE;
-    public static final ForgeConfigSpec.DoubleValue KNOCKBACK_MULTIPLIER;
-    public static final ForgeConfigSpec.DoubleValue MAX_LAUNCH_VELOCITY;
-    public static final ForgeConfigSpec.DoubleValue STAGE_TWO_HEALTH;
-    public static final ForgeConfigSpec.DoubleValue STAGE_THREE_HEALTH;
-    public static final ForgeConfigSpec.IntValue ACTION_INTERVAL;
-    public static final ForgeConfigSpec.DoubleValue STAGE_TWO_COOLDOWN_MULTIPLIER;
-    public static final ForgeConfigSpec.DoubleValue STAGE_THREE_COOLDOWN_MULTIPLIER;
-    public static final ForgeConfigSpec.DoubleValue STAGE_THREE_SPEED_BONUS;
-    public static final ForgeConfigSpec.IntValue MAX_SKILL_HEADS;
-    public static final ForgeConfigSpec.DoubleValue COMBAT_RANGE;
-    public static final ForgeConfigSpec.IntValue SHIELD_COOLDOWN_TICKS;
-    public static final ForgeConfigSpec.BooleanValue STAGE_ROAR;
-    public static final ForgeConfigSpec.DoubleValue ROAR_RADIUS;
-    public static final ForgeConfigSpec.BooleanValue DEBUG_LOGGING;
+    public static final ModConfigSpec.BooleanValue ENABLED;
+    public static final ModConfigSpec.BooleanValue ENHANCE_SUMMONED;
+    public static final ModConfigSpec.DoubleValue SEGMENT_HEALTH;
+    public static final ModConfigSpec.DoubleValue ATTACK_DAMAGE;
+    public static final ModConfigSpec.DoubleValue KNOCKBACK_MULTIPLIER;
+    public static final ModConfigSpec.DoubleValue MAX_LAUNCH_VELOCITY;
+    public static final ModConfigSpec.DoubleValue STAGE_TWO_HEALTH;
+    public static final ModConfigSpec.DoubleValue STAGE_THREE_HEALTH;
+    public static final ModConfigSpec.IntValue ACTION_INTERVAL;
+    public static final ModConfigSpec.DoubleValue STAGE_TWO_COOLDOWN_MULTIPLIER;
+    public static final ModConfigSpec.DoubleValue STAGE_THREE_COOLDOWN_MULTIPLIER;
+    public static final ModConfigSpec.DoubleValue STAGE_THREE_SPEED_BONUS;
+    public static final ModConfigSpec.IntValue MAX_SKILL_HEADS;
+    public static final ModConfigSpec.DoubleValue COMBAT_RANGE;
+    public static final ModConfigSpec.IntValue SHIELD_COOLDOWN_TICKS;
+    public static final ModConfigSpec.BooleanValue STAGE_ROAR;
+    public static final ModConfigSpec.DoubleValue ROAR_RADIUS;
+    public static final ModConfigSpec.BooleanValue DEBUG_LOGGING;
 
     public static final SkillConfig SKY_REND;
-    public static final ForgeConfigSpec.DoubleValue SKY_REND_BODY_MULTIPLIER;
-    public static final ForgeConfigSpec.IntValue SKY_REND_WAKE_DURATION;
+    public static final ModConfigSpec.DoubleValue SKY_REND_BODY_MULTIPLIER;
+    public static final ModConfigSpec.IntValue SKY_REND_WAKE_DURATION;
 
     public static final SkillConfig CHAIN_BITE;
-    public static final ForgeConfigSpec.IntValue CHAIN_BITE_COUNT;
+    public static final ModConfigSpec.IntValue CHAIN_BITE_COUNT;
 
     public static final SkillConfig SHATTER_CRYSTAL;
-    public static final ForgeConfigSpec.DoubleValue SHATTER_SHARD_MULTIPLIER;
-    public static final ForgeConfigSpec.IntValue SHATTER_SHARD_COUNT;
+    public static final ModConfigSpec.DoubleValue SHATTER_SHARD_MULTIPLIER;
+    public static final ModConfigSpec.IntValue SHATTER_SHARD_COUNT;
 
     public static final SkillConfig GALE_COIL;
-    public static final ForgeConfigSpec.DoubleValue GALE_COIL_RADIUS;
-    public static final ForgeConfigSpec.DoubleValue GALE_COIL_BODY_MULTIPLIER;
-    public static final ForgeConfigSpec.DoubleValue GALE_COIL_WALL_PULL;
+    public static final ModConfigSpec.DoubleValue GALE_COIL_RADIUS;
+    public static final ModConfigSpec.DoubleValue GALE_COIL_BODY_MULTIPLIER;
+    public static final ModConfigSpec.DoubleValue GALE_COIL_WALL_PULL;
 
     public static final SkillConfig CRESCENT_BLADE;
-    public static final ForgeConfigSpec.IntValue CRESCENT_COUNT;
-    public static final ForgeConfigSpec.DoubleValue CRESCENT_RANGE;
+    public static final ModConfigSpec.IntValue CRESCENT_COUNT;
+    public static final ModConfigSpec.DoubleValue CRESCENT_RANGE;
 
     public static final SkillConfig SERPENT_TRAIL;
-    public static final ForgeConfigSpec.IntValue SERPENT_TRAIL_DELAY;
-    public static final ForgeConfigSpec.DoubleValue SERPENT_TRAIL_RADIUS;
-    public static final ForgeConfigSpec.DoubleValue SERPENT_TRAIL_CONTACT_MULTIPLIER;
+    public static final ModConfigSpec.IntValue SERPENT_TRAIL_DELAY;
+    public static final ModConfigSpec.DoubleValue SERPENT_TRAIL_RADIUS;
+    public static final ModConfigSpec.DoubleValue SERPENT_TRAIL_CONTACT_MULTIPLIER;
 
     public static final SkillConfig SCALE_RAIN;
-    public static final ForgeConfigSpec.IntValue SCALE_RAIN_WAVES;
-    public static final ForgeConfigSpec.IntValue SCALE_RAIN_EXTRA_MARKS;
-    public static final ForgeConfigSpec.DoubleValue SCALE_RAIN_RADIUS;
+    public static final ModConfigSpec.IntValue SCALE_RAIN_WAVES;
+    public static final ModConfigSpec.IntValue SCALE_RAIN_EXTRA_MARKS;
+    public static final ModConfigSpec.DoubleValue SCALE_RAIN_RADIUS;
 
     public static final SkillConfig INHALE;
-    public static final ForgeConfigSpec.DoubleValue INHALE_PULL;
-    public static final ForgeConfigSpec.DoubleValue INHALE_RANGE;
+    public static final ModConfigSpec.DoubleValue INHALE_PULL;
+    public static final ModConfigSpec.DoubleValue INHALE_RANGE;
 
     public static final SkillConfig SHED_TORNADO;
-    public static final ForgeConfigSpec.IntValue SHED_TORNADO_COUNT;
-    public static final ForgeConfigSpec.IntValue SHED_TORNADO_LIFETIME;
+    public static final ModConfigSpec.IntValue SHED_TORNADO_COUNT;
+    public static final ModConfigSpec.IntValue SHED_TORNADO_LIFETIME;
 
     public static final SkillConfig STORM_COLLAPSE;
-    public static final ForgeConfigSpec.DoubleValue STORM_COLLAPSE_RADIUS;
-    public static final ForgeConfigSpec.DoubleValue STORM_COLLAPSE_PULL;
+    public static final ModConfigSpec.DoubleValue STORM_COLLAPSE_RADIUS;
+    public static final ModConfigSpec.DoubleValue STORM_COLLAPSE_PULL;
 
     static {
-        ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder b = new ModConfigSpec.Builder();
 
         b.comment("风暴之眼基础设置").push("eots");
         ENABLED = b.comment("总开关，false 时完全保留深层天境原版行为").define("enabled", true);
@@ -159,13 +159,13 @@ public final class EotsConfig {
     }
 
     public static final class SkillConfig {
-        public final ForgeConfigSpec.BooleanValue enabled;
-        public final ForgeConfigSpec.IntValue cooldown;
-        public final ForgeConfigSpec.DoubleValue damageMultiplier;
-        public final ForgeConfigSpec.IntValue weight;
-        public final ForgeConfigSpec.IntValue minStage;
+        public final ModConfigSpec.BooleanValue enabled;
+        public final ModConfigSpec.IntValue cooldown;
+        public final ModConfigSpec.DoubleValue damageMultiplier;
+        public final ModConfigSpec.IntValue weight;
+        public final ModConfigSpec.IntValue minStage;
 
-        SkillConfig(ForgeConfigSpec.Builder b, int cooldown, double damage, int weight, int minStage) {
+        SkillConfig(ModConfigSpec.Builder b, int cooldown, double damage, int weight, int minStage) {
             this.enabled = b.comment("是否启用").define("enabled", true);
             this.cooldown = b.comment("冷却（tick）").defineInRange("cooldown", cooldown, 0, 100000);
             this.damageMultiplier = b.comment("伤害倍率（伤害 = 基础攻击力 × 该值）").defineInRange("damageMultiplier", damage, 0.0, 1000.0);

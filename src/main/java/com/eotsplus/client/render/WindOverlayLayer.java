@@ -11,10 +11,10 @@ import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
-import teamrazor.deepaether.entity.eots.EOTSSegment;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSSegment;
 
 public class WindOverlayLayer extends RenderLayer<EOTSSegment, EntityModel<EOTSSegment>> {
-    private static final ResourceLocation SWIRL = new ResourceLocation("textures/entity/creeper/creeper_armor.png");
+    private static final ResourceLocation SWIRL = ResourceLocation.withDefaultNamespace("textures/entity/creeper/creeper_armor.png");
 
     public WindOverlayLayer(RenderLayerParent<EOTSSegment, EntityModel<EOTSSegment>> parent) {
         super(parent);
@@ -32,6 +32,6 @@ public class WindOverlayLayer extends RenderLayer<EOTSSegment, EntityModel<EOTSS
         }
         float scroll = ageInTicks * 0.012F;
         VertexConsumer vc = buffers.getBuffer(RenderType.energySwirl(SWIRL, scroll, scroll * 0.6F));
-        this.getParentModel().renderToBuffer(ps, vc, light, OverlayTexture.NO_OVERLAY, 0.35F * strength, 0.75F * strength, 0.9F * strength, 1.0F);
+        this.getParentModel().renderToBuffer(ps, vc, light, OverlayTexture.NO_OVERLAY, net.minecraft.util.FastColor.ARGB32.color(255, (int) (255 * 0.35F * strength), (int) (255 * 0.75F * strength), (int) (255 * 0.9F * strength)));
     }
 }

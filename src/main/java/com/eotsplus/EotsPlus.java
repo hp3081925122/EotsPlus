@@ -11,19 +11,19 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-import net.minecraftforge.event.server.ServerStoppedEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.server.ServerStoppedEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+
+
 import org.slf4j.Logger;
-import teamrazor.deepaether.entity.eots.EOTSController;
-import teamrazor.deepaether.entity.eots.EOTSSegment;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSController;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSSegment;
 
 @Mod(EotsPlus.MOD_ID)
 public class EotsPlus {
@@ -31,19 +31,14 @@ public class EotsPlus {
     public static final Logger LOGGER = LogUtils.getLogger();
     private static final int BASE_SEGMENTS = 22;
 
-    public EotsPlus() {
-        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, EotsConfig.SPEC);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, EotsClientConfig.SPEC);
+    public EotsPlus(IEventBus modBus, ModContainer container) {
+        container.registerConfig(ModConfig.Type.COMMON, EotsConfig.SPEC);
+        container.registerConfig(ModConfig.Type.CLIENT, EotsClientConfig.SPEC);
         EotsEntities.ENTITIES.register(modBus);
-        modBus.addListener(this::commonSetup);
-        MinecraftForge.EVENT_BUS.addListener(this::onJoin);
-        MinecraftForge.EVENT_BUS.addListener(this::onLevelTick);
-        MinecraftForge.EVENT_BUS.addListener(this::onServerStopped);
-    }
-
-    private void commonSetup(FMLCommonSetupEvent event) {
-        event.enqueueWork(EotsNetwork::register);
+        modBus.addListener(EotsNetwork::register);
+        NeoForge.EVENT_BUS.addListener(this::onJoin);
+        NeoForge.EVENT_BUS.addListener(this::onLevelTick);
+        NeoForge.EVENT_BUS.addListener(this::onServerStopped);
     }
 
     public static boolean isEnhanced(EOTSSegment segment) {
@@ -85,8 +80,8 @@ public class EotsPlus {
         }
     }
 
-    private void onLevelTick(TickEvent.LevelTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level)) {
+    private void onLevelTick(LevelTickEvent.Post event) {
+        if (!(event.getLevel() instanceof ServerLevel level)) {
             return;
         }
         EotsHazards.tick(level);
