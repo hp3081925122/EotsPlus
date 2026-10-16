@@ -1,15 +1,25 @@
 package com.eotsplus.network;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceLocation;
+import com.eotsplus.EotsPlus;
 
-import java.util.function.Supplier;
+public record FxPacket(int kind, double x, double y, double z, float a, float b, float c, float radius, float extra, int duration, int color) implements CustomPacketPayload {
+    public static final Type<FxPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(EotsPlus.MOD_ID, "fx"));
+    public static final StreamCodec<FriendlyByteBuf, FxPacket> STREAM_CODEC = StreamCodec.ofMember(FxPacket::write, FxPacket::decode);
 
-public record FxPacket(int type, double x, double y, double z, float a, float b, float c, float radius, float extra, int duration, int color) {
+    private void write(FriendlyByteBuf buf) {
+        encode(this, buf);
+    }
+
+    @Override
+    public Type<FxPacket> type() {
+        return TYPE;
+    }
     public static void encode(FxPacket p, FriendlyByteBuf buf) {
-        buf.writeVarInt(p.type);
+        buf.writeVarInt(p.kind);
         buf.writeDouble(p.x);
         buf.writeDouble(p.y);
         buf.writeDouble(p.z);
@@ -26,8 +36,4 @@ public record FxPacket(int type, double x, double y, double z, float a, float b,
         return new FxPacket(buf.readVarInt(), buf.readDouble(), buf.readDouble(), buf.readDouble(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readVarInt(), buf.readInt());
     }
 
-    public static void handle(FxPacket p, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> com.eotsplus.client.fx.FxManager.accept(p)));
-        ctx.get().setPacketHandled(true);
-    }
 }

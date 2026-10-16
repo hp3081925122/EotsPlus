@@ -13,7 +13,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.network.NetworkHooks;
+import net.minecraft.server.level.ServerEntity;
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -51,7 +52,7 @@ public class GaleTornado extends Entity {
     }
 
     @Override
-    protected void defineSynchedData() {
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
     }
 
     @Nullable
@@ -188,7 +189,7 @@ public class GaleTornado extends Entity {
     }
 
     @Override
-    public Packet<ClientGamePacketListener> getAddEntityPacket() {
-        return NetworkHooks.getEntitySpawningPacket(this);
+    public Packet<ClientGamePacketListener> getAddEntityPacket(ServerEntity serverEntity) {
+        return new ClientboundAddEntityPacket(this, serverEntity);
     }
 }

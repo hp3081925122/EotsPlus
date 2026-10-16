@@ -3,7 +3,7 @@ package com.eotsplus.client.anim;
 import com.eotsplus.anim.EotsAnim;
 import com.eotsplus.duck.EotsSegmentDuck;
 import net.minecraft.util.Mth;
-import teamrazor.deepaether.entity.eots.EOTSSegment;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSSegment;
 
 public final class EotsPose {
     public static final EotsPose INSTANCE = new EotsPose();

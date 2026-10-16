@@ -11,8 +11,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
-import teamrazor.deepaether.init.DAParticles;
-import teamrazor.deepaether.init.DASounds;
+import io.github.razordevs.deep_aether.init.DAParticles;
+import io.github.razordevs.deep_aether.init.DASounds;
 
 public class StormCollapseSkill extends EotsSkill {
     private static final int GATHER = 0;
@@ -136,7 +136,7 @@ public class StormCollapseSkill extends EotsSkill {
         level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, c.x, c.y, c.z, 1, 0, 0, 0, 0);
         level.sendParticles(DAParticles.EOTS_EXPLOSION.get(), c.x, c.y + 1.0, c.z, 1, 0, 0, 0, 0);
         level.sendParticles(ParticleTypes.CLOUD, c.x, c.y, c.z, 80, this.radius * 0.3, 0.3, this.radius * 0.3, 0.4);
-        this.g.soundAt(c, SoundEvents.GENERIC_EXPLODE, 3.0F, 0.6F);
+        this.g.soundAt(c, SoundEvents.GENERIC_EXPLODE.value(), 3.0F, 0.6F);
         this.g.soundAt(c, DASounds.EOTS_AMBIENT.get(), 4.0F, 0.5F);
         EotsFx.shockwave(level, this.center.add(0, 0.1, 0), (float) this.radius + 2.0F, 16, FxType.STORM);
         EotsFx.shake(level, c, 1.6F, 48.0F, 20);

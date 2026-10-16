@@ -14,22 +14,22 @@ import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.client.event.EntityRenderersEvent;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
-import net.minecraftforge.client.event.ViewportEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import teamrazor.deepaether.entity.eots.EOTSSegment;
-import teamrazor.deepaether.init.DAEntities;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.client.event.ViewportEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSSegment;
+import io.github.razordevs.deep_aether.init.DAEntities;
 
 public final class EotsClient {
     private EotsClient() {
     }
 
-    @Mod.EventBusSubscriber(modid = EotsPlus.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
+    @EventBusSubscriber(modid = EotsPlus.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
     public static final class ModEvents {
         private ModEvents() {
         }
@@ -51,16 +51,13 @@ public final class EotsClient {
         }
     }
 
-    @Mod.EventBusSubscriber(modid = EotsPlus.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
+    @EventBusSubscriber(modid = EotsPlus.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.GAME)
     public static final class ForgeEvents {
         private ForgeEvents() {
         }
 
         @SubscribeEvent
-        public static void onClientTick(TickEvent.ClientTickEvent event) {
-            if (event.phase != TickEvent.Phase.END) {
-                return;
-            }
+        public static void onClientTick(ClientTickEvent.Post event) {
             Minecraft mc = Minecraft.getInstance();
             if (mc.level == null || mc.isPaused()) {
                 return;
@@ -73,7 +70,7 @@ public final class EotsClient {
             if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) {
                 return;
             }
-            FxManager.render(event.getPoseStack(), event.getCamera().getPosition(), event.getPartialTick());
+            FxManager.render(event.getPoseStack(), event.getCamera().getPosition(), event.getPartialTick().getGameTimeDeltaPartialTick(false));
         }
 
         @SubscribeEvent

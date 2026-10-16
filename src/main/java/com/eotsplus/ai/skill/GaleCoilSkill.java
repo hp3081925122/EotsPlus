@@ -12,8 +12,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
-import teamrazor.deepaether.entity.eots.EOTSSegment;
-import teamrazor.deepaether.init.DASounds;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSSegment;
+import io.github.razordevs.deep_aether.init.DASounds;
 
 import java.util.HashMap;
 import java.util.List;
@@ -167,7 +167,7 @@ public class GaleCoilSkill extends EotsSkill {
         EotsFx.shockwave(level, this.center.add(0, 0.1, 0), 7.0F, 14, FxType.WIND);
         EotsFx.column(level, this.center, 1.6F, 7.0F, 16, FxType.STORM);
         EotsFx.shake(level, c, 0.8F, 24.0F, 14);
-        this.g.soundAt(c, SoundEvents.GENERIC_EXPLODE, 2.0F, 1.4F);
+        this.g.soundAt(c, SoundEvents.GENERIC_EXPLODE.value(), 2.0F, 1.4F);
         this.g.soundAt(c, DASounds.EOTS_SHOOT.get(), 3.0F, 0.6F);
     }
 

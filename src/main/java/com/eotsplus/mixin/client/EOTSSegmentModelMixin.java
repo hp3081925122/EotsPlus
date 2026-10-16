@@ -10,8 +10,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import teamrazor.deepaether.client.model.EOTSSegmentModel;
-import teamrazor.deepaether.entity.eots.EOTSSegment;
+import io.github.razordevs.deep_aether.client.model.EOTSSegmentModel;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSSegment;
 
 @Mixin(value = EOTSSegmentModel.class, remap = false)
 public abstract class EOTSSegmentModelMixin {
@@ -51,7 +51,7 @@ public abstract class EOTSSegmentModelMixin {
         this.eotsplus$fin = this.bb_main.getChild("cube_r1");
     }
 
-    @Inject(method = {"setupAnim(Lteamrazor/deepaether/entity/eots/EOTSSegment;FFFFF)V", "m_6973_(Lteamrazor/deepaether/entity/eots/EOTSSegment;FFFFF)V"}, at = @At("TAIL"), require = 1)
+    @Inject(method = "setupAnim(Lio/github/razordevs/deep_aether/entity/living/boss/eots/EOTSSegment;FFFFF)V", at = @At("TAIL"), require = 1)
     private void eotsplus$animate(EOTSSegment entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, CallbackInfo ci) {
         this.eotsplus$resolve();
         this.bb_main.resetPose();

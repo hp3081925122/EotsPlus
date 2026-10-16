@@ -1,7 +1,7 @@
 package com.eotsplus.duck;
 
 import net.minecraft.world.entity.Entity;
-import teamrazor.deepaether.entity.eots.EOTSSegment;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSSegment;
 
 import java.util.List;
 

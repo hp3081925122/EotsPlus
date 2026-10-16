@@ -7,9 +7,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import teamrazor.deepaether.entity.eots.EOTSSegment;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSSegment;
 
-@Mixin(targets = "teamrazor.deepaether.entity.eots.EOTSSegment$EotsSegmentMoveControl", remap = false)
+@Mixin(targets = "io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSSegment$EotsSegmentMoveControl", remap = false)
 public abstract class EotsSegmentMoveControlMixin {
     @Shadow
     @Final

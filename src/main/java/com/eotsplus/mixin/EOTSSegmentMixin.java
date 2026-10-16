@@ -19,8 +19,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import teamrazor.deepaether.entity.eots.EOTSController;
-import teamrazor.deepaether.entity.eots.EOTSSegment;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSController;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSSegment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -82,10 +82,10 @@ public abstract class EOTSSegmentMixin extends FlyingMob implements EotsSegmentD
     public abstract boolean isControllingSegment();
 
     @Inject(method = "defineSynchedData", at = @At("TAIL"), remap = true)
-    private void eotsplus$defineData(CallbackInfo ci) {
-        this.entityData.define(EOTSPLUS$ANIM, 0);
-        this.entityData.define(EOTSPLUS$STAGE, (byte) 1);
-        this.entityData.define(EOTSPLUS$CHAIN_INDEX, 0);
+    private void eotsplus$defineData(SynchedEntityData.Builder builder, CallbackInfo ci) {
+        builder.define(EOTSPLUS$ANIM, 0);
+        builder.define(EOTSPLUS$STAGE, (byte) 1);
+        builder.define(EOTSPLUS$CHAIN_INDEX, 0);
     }
 
     @Inject(method = "tick", at = @At("TAIL"), remap = true)

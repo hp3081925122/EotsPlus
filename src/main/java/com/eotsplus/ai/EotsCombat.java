@@ -15,8 +15,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import teamrazor.deepaether.entity.eots.EOTSController;
-import teamrazor.deepaether.entity.eots.EOTSSegment;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSController;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSSegment;
 
 import java.util.List;
 

@@ -10,7 +10,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
-import teamrazor.deepaether.init.DASounds;
+import io.github.razordevs.deep_aether.init.DASounds;
 
 public class InhaleSkill extends EotsSkill {
     private static final int POSITION = 0;
@@ -133,7 +133,7 @@ public class InhaleSkill extends EotsSkill {
             }
         }
         this.g.sound(DASounds.EOTS_SHOOT.get(), 4.0F, 0.5F);
-        this.g.sound(SoundEvents.GENERIC_EXPLODE, 1.2F, 0.5F);
+        this.g.sound(SoundEvents.GENERIC_EXPLODE.value(), 1.2F, 0.5F);
         EotsFx.fan(this.g.level(), mouth, this.exhaleDir, (float) (this.range * 0.8), (float) HALF_ANGLE + 3.0F, 12, FxType.DANGER);
         EotsFx.shake(this.g.level(), mouth, 0.7F, 28.0F, 12);
     }

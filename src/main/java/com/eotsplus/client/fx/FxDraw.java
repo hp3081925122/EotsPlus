@@ -21,7 +21,7 @@ public final class FxDraw {
     }
 
     public static void v(VertexConsumer vc, Matrix4f m, double x, double y, double z, int color, float alpha) {
-        vc.vertex(m, (float) x, (float) y, (float) z).color(r(color), g(color), b(color), Mth.clamp(alpha, 0.0F, 1.0F)).endVertex();
+        vc.addVertex(m, (float) x, (float) y, (float) z).setColor(r(color), g(color), b(color), Mth.clamp(alpha, 0.0F, 1.0F));
     }
 
     public static void quad(VertexConsumer vc, Matrix4f m, double[] a, double[] b, double[] c, double[] d, int color, float alpha) {

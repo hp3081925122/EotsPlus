@@ -11,8 +11,8 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
-import teamrazor.deepaether.entity.eots.EOTSSegment;
-import teamrazor.deepaether.init.DASounds;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSSegment;
+import io.github.razordevs.deep_aether.init.DASounds;
 
 import java.util.ArrayList;
 import java.util.HashSet;

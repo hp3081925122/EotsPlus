@@ -13,8 +13,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
-import teamrazor.deepaether.entity.eots.EOTSSegment;
-import teamrazor.deepaether.init.DASounds;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSSegment;
+import io.github.razordevs.deep_aether.init.DASounds;
 
 import java.util.HashSet;
 import java.util.Set;

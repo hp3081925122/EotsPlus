@@ -1,157 +1,133 @@
-buildscript {
-    repositories {
-        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
-    }
-}
-
+// 当前文件只保留最小的 NeoForge 开发、构建和运行配置。
 plugins {
+    id 'java-library'
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[6.0.24,6.2)'
+    id 'net.neoforged.gradle.userdev' version '7.1.37'
 }
-
-repositories {
-    maven {
-        name = 'CurseMaven'
-        url = 'https://cursemaven.com'
-        content { includeGroup 'curse.maven' }
-    }
-    maven {
-        name = 'Modrinth'
-        url = 'https://api.modrinth.com/maven'
-        content { includeGroup 'maven.modrinth' }
-    }
-    mavenCentral()
-}
-
-apply plugin: 'org.spongepowered.mixin'
 
 version = project.mod_version
 group = project.mod_group_id
 
-base {
-    archivesName = "${project.mod_id}-${project.minecraft_version}-forge"
+repositories {
+    mavenLocal()
+    maven { url = "https://api.modrinth.com/maven" }
+    maven { url = 'https://maven.neoforged.net/releases' }
+    maven {
+        url = 'https://www.cursemaven.com'
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+base {
+    archivesName = "${project.mod_id}-${project.minecraft_version}-neoforge"
+}
 
-minecraft {
-    mappings channel: project.mapping_channel, version: project.mapping_version
-    copyIdeResources = true
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
-    runs {
-        configureEach {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+runs {
+    configureEach {
+        systemProperty 'forge.logging.markers', 'REGISTRIES'
+        systemProperty 'forge.logging.console.level', 'debug'
+        modSource project.sourceSets.main
+    }
 
-            mods {
-                "${project.mod_id}" {
-                    source sourceSets.main
-                }
-            }
-        }
+    client {
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+    }
 
-        client {
-            property 'forge.enabledGameTestNamespaces', project.mod_id
-        }
+    server {
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+        arguments.add '--nogui'
+    }
 
-        server {
-            args '--nogui'
-        }
+    gameTestServer {
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+    }
 
-        data {
-            workingDirectory project.file('run-data')
-            args '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-        }
+    data {
+        arguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
     }
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
-mixin {
-    add sourceSets.main, "${project.mod_id}.refmap.json"
-    config "${project.mod_id}.mixins.json"
-}
-
 dependencies {
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-    minecraft "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
+    implementation "net.neoforged:neoforge:${project.neo_version}"
+    implementation "maven.modrinth:deep-aether:${project.deep_aether_version}"
+    implementation "maven.modrinth:aether:${project.aether_version}"
+    compileOnly files("libs/nitrogen_internals-1.21.1-1.1.25-neoforge.jar")
+    runtimeOnly "maven.modrinth:owo-lib:NMCHU6DZ"
 
-    // 天境本体，CurseForge 文件 6134920（1.20.1 Forge）
-    compileOnly fg.deobf("curse.maven:aether-255308:${project.aether_file_id}")
-    runtimeOnly fg.deobf("curse.maven:aether-255308:${project.aether_file_id}")
-
-    // 深层天境，Modrinth Maven
-    compileOnly fg.deobf("maven.modrinth:deep-aether:${project.deep_aether_version}")
-    runtimeOnly fg.deobf("maven.modrinth:deep-aether:${project.deep_aether_version}")
-
-    // 天境内嵌的 Nitrogen 库，仅编译期用于解析 AetherBossMob 继承链
-    compileOnly files('libs/nitrogen_internals-1.20.1-1.0.12-neoforge.jar')
-
-    // 运行期前置：Curios（天境）、TerraBlender（深层天境）
-    runtimeOnly fg.deobf("curse.maven:curios-309927:${project.curios_file_id}")
-    runtimeOnly fg.deobf("maven.modrinth:terrablender:${project.terrablender_version_id}")
 }
 
-def metadataProperties = new Properties()
-file('gradle.properties').withReader('UTF-8') { metadataProperties.load(it) }
-
-tasks.named('processResources', ProcessResources).configure {
+tasks.withType(ProcessResources).configureEach {
     def replaceProperties = [
-            minecraft_version      : project.minecraft_version,
+            minecraft_version: project.minecraft_version,
             minecraft_version_range: project.minecraft_version_range,
-            forge_version_range    : project.forge_version_range,
-            loader_version_range   : project.loader_version_range,
-            mod_id                 : project.mod_id,
-            mod_name               : project.mod_name,
-            mod_license            : project.mod_license,
-            mod_version            : project.mod_version,
-            mod_authors            : project.mod_authors,
-            mod_description        : metadataProperties.getProperty('mod_description')
+            neo_version: project.neo_version,
+            neo_version_range: project.neo_version_range,
+            loader_version_range: project.loader_version_range,
+            mod_id: project.mod_id,
+            mod_name: project.mod_name,
+            mod_license: project.mod_license,
+            mod_version: project.mod_version,
+            mod_authors: project.mod_authors,
+            mod_description: project.mod_description
     ]
     inputs.properties replaceProperties
 
-    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
-        expand replaceProperties + [project: project]
+    filesMatching(['META-INF/neoforge.mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties
     }
-}
-
-tasks.named('jar', Jar).configure {
-    manifest {
-        attributes([
-                'Specification-Title'   : project.mod_id,
-                'Specification-Vendor'  : project.mod_authors,
-                'Specification-Version' : '1',
-                'Implementation-Title'  : project.name,
-                'Implementation-Version': project.jar.archiveVersion,
-                'Implementation-Vendor' : project.mod_authors,
-                'MixinConfigs'          : "${project.mod_id}.mixins.json"
-        ])
-    }
-    finalizedBy 'reobfJar'
 }
 
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
-            artifact jar
+            from components.java
         }
     }
     repositories {
         maven {
-            url "file://${project.projectDir}/mcmodsrepo"
+            url "file://${project.projectDir}/repo"
         }
     }
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+sourceSets {
+    validation {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+
+if (project.hasProperty('validateMigration')) {
+    runs.configureEach {
+        modSource project.sourceSets.validation
+    }
+    runs.gameTestServer {
+        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+    }
+}
+
+if (project.hasProperty('renderPreviewJar')) {
+    dependencies {
+        validationCompileOnly files(project.property('renderPreviewJar'))
+        runtimeOnly files(project.property('renderPreviewJar'))
+    }
+    runs.client {
+        systemProperty 'render_preview.open', 'true'
+    }
+}
+
+if (!project.hasProperty('renderPreviewJar')) {
+    sourceSets.validation.java.exclude '**/EotsPreview.java'
 }

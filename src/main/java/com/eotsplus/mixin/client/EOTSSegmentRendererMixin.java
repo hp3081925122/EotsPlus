@@ -9,13 +9,13 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import teamrazor.deepaether.client.renderer.EOTSSegmentRenderer;
-import teamrazor.deepaether.entity.eots.EOTSSegment;
+import io.github.razordevs.deep_aether.client.renderer.entity.EOTSSegmentRenderer;
+import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSSegment;
 
 @Mixin(value = EOTSSegmentRenderer.class, remap = false)
 public abstract class EOTSSegmentRendererMixin {
-    @Inject(method = {"setupRotations(Lteamrazor/deepaether/entity/eots/EOTSSegment;Lcom/mojang/blaze3d/vertex/PoseStack;FFF)V", "m_7523_(Lteamrazor/deepaether/entity/eots/EOTSSegment;Lcom/mojang/blaze3d/vertex/PoseStack;FFF)V"}, at = @At("TAIL"), require = 1)
-    private void eotsplus$pose(EOTSSegment seg, PoseStack ps, float ageInTicks, float rotationYaw, float partialTicks, CallbackInfo ci) {
+    @Inject(method = "setupRotations(Lio/github/razordevs/deep_aether/entity/living/boss/eots/EOTSSegment;Lcom/mojang/blaze3d/vertex/PoseStack;FFFF)V", at = @At("TAIL"), require = 1)
+    private void eotsplus$pose(EOTSSegment seg, PoseStack ps, float ageInTicks, float rotationYaw, float partialTicks, float scale, CallbackInfo ci) {
         if (!EotsClientConfig.ENABLE_ANIMATIONS.get()) {
             return;
         }

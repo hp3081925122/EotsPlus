@@ -22,7 +22,7 @@ public final class FxManager {
     }
 
     public static void accept(FxPacket p) {
-        if (p.type() == FxType.SHAKE) {
+        if (p.kind() == FxType.SHAKE) {
             CameraShake.add(new Vec3(p.x(), p.y(), p.z()), p.a(), p.radius(), p.duration());
             return;
         }
@@ -63,7 +63,7 @@ public final class FxManager {
             float p = Mth.clamp(age / Math.max(1, fx.p.duration()), 0.0F, 1.0F);
             float fade = Math.min(1.0F, age / 4.0F) * Math.min(1.0F, (fx.p.duration() - age) / 5.0F);
             fade = Mth.clamp(fade, 0.0F, 1.0F);
-            switch (fx.p.type()) {
+            switch (fx.p.kind()) {
                 case FxType.CIRCLE -> drawCircle(vc, m, fx.p, age, p, fade);
                 case FxType.LINE -> drawLine(vc, m, fx.p, age, p, fade);
                 case FxType.FAN -> drawFan(vc, m, fx.p, age, p, fade);
