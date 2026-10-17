@@ -23,13 +23,18 @@ public final class EotsConfig {
     public static final ForgeConfigSpec.BooleanValue STAGE_ROAR;
     public static final ForgeConfigSpec.DoubleValue ROAR_RADIUS;
     public static final ForgeConfigSpec.BooleanValue DEBUG_LOGGING;
+    public static final ForgeConfigSpec.IntValue MELEE_LINGER;
+    public static final ForgeConfigSpec.BooleanValue LOW_MELEE_START;
 
     public static final SkillConfig SKY_REND;
     public static final ForgeConfigSpec.DoubleValue SKY_REND_BODY_MULTIPLIER;
     public static final ForgeConfigSpec.IntValue SKY_REND_WAKE_DURATION;
+    public static final ForgeConfigSpec.IntValue SKY_REND_STUCK;
+    public static final ForgeConfigSpec.DoubleValue SKY_REND_IMPACT_MULTIPLIER;
 
     public static final SkillConfig CHAIN_BITE;
     public static final ForgeConfigSpec.IntValue CHAIN_BITE_COUNT;
+    public static final ForgeConfigSpec.DoubleValue CHAIN_BITE_SWEEP_MULTIPLIER;
 
     public static final SkillConfig SHATTER_CRYSTAL;
     public static final ForgeConfigSpec.DoubleValue SHATTER_SHARD_MULTIPLIER;
@@ -57,6 +62,7 @@ public final class EotsConfig {
     public static final SkillConfig INHALE;
     public static final ForgeConfigSpec.DoubleValue INHALE_PULL;
     public static final ForgeConfigSpec.DoubleValue INHALE_RANGE;
+    public static final ForgeConfigSpec.DoubleValue INHALE_SNAP_RANGE;
 
     public static final SkillConfig SHED_TORNADO;
     public static final ForgeConfigSpec.IntValue SHED_TORNADO_COUNT;
@@ -65,6 +71,7 @@ public final class EotsConfig {
     public static final SkillConfig STORM_COLLAPSE;
     public static final ForgeConfigSpec.DoubleValue STORM_COLLAPSE_RADIUS;
     public static final ForgeConfigSpec.DoubleValue STORM_COLLAPSE_PULL;
+    public static final ForgeConfigSpec.IntValue STORM_COLLAPSE_DOWNED;
 
     static {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
@@ -88,17 +95,22 @@ public final class EotsConfig {
         STAGE_ROAR = b.comment("转阶段时是否释放怒吼").define("stageRoar", true);
         ROAR_RADIUS = b.comment("怒吼风压半径").defineInRange("roarRadius", 12.0, 1.0, 64.0);
         DEBUG_LOGGING = b.comment("输出调试日志").define("debugLogging", false);
+        MELEE_LINGER = b.comment("近战技能结束后蛇头在低空游弋、留给近战输出的时间（tick），第三阶段 ×0.75，0 为立即回到高空").defineInRange("meleeLinger", 30, 0, 600);
+        LOW_MELEE_START = b.comment("蛇头不在高空待机位置时是否允许直接接近战技能（不必先飞回高空）").define("lowMeleeStart", true);
         b.pop();
 
-        b.comment("破空俯冲：后仰锁定路线，沿直线贯穿地面预警区域；第二阶段起留下侧向乱流").push("skyRend");
+        b.comment("破空俯冲（近战）：后仰锁定路线俯冲，犁地后蛇头扎入地面形成破绽；第二阶段起拔出时甩头横扫并留下侧向乱流").push("skyRend");
         SKY_REND = new SkillConfig(b, 160, 1.4, 12, 1);
         SKY_REND_BODY_MULTIPLIER = b.comment("蛇身擦过时的伤害倍率").defineInRange("bodyDamageMultiplier", 0.6, 0.0, 1000.0);
         SKY_REND_WAKE_DURATION = b.comment("乱流尾迹持续时间（tick）").defineInRange("wakeDuration", 60, 0, 1200);
+        SKY_REND_STUCK = b.comment("蛇头扎地卡住的时间（tick），第三阶段 ×0.75").defineInRange("stuckTicks", 26, 0, 400);
+        SKY_REND_IMPACT_MULTIPLIER = b.comment("扎地冲击与拔出横扫的伤害倍率").defineInRange("impactDamageMultiplier", 0.6, 0.0, 1000.0);
         b.pop();
 
-        b.comment("连环噬咬：逼近后缩颈蓄力，再弹射咬击，可连续多次").push("chainBite");
+        b.comment("连环噬咬（近战）：降到地面高度贴身连咬，最后甩头横扫").push("chainBite");
         CHAIN_BITE = new SkillConfig(b, 140, 1.0, 12, 1);
         CHAIN_BITE_COUNT = b.comment("基础咬击次数，第三阶段 +1").defineInRange("count", 3, 1, 10);
+        CHAIN_BITE_SWEEP_MULTIPLIER = b.comment("收尾甩头横扫伤害倍率").defineInRange("sweepDamageMultiplier", 0.8, 0.0, 1000.0);
         b.pop();
 
         b.comment("风晶裂弹：口中汇聚风晶，命中后向四周炸出碎晶").push("shatterCrystal");
@@ -107,7 +119,7 @@ public final class EotsConfig {
         SHATTER_SHARD_COUNT = b.comment("基础碎晶数量，阶段越高越多").defineInRange("shardCount", 8, 1, 32);
         b.pop();
 
-        b.comment("缠风绞环：绕目标盘成风环困住敌人，随后收紧绞杀并在中心爆发").push("galeCoil");
+        b.comment("缠风绞环（近战）：贴地绕目标盘成风环困住敌人，随后收紧并以蛇头砸向中心爆发").push("galeCoil");
         GALE_COIL = new SkillConfig(b, 260, 1.1, 9, 1);
         GALE_COIL_RADIUS = b.comment("风环半径").defineInRange("radius", 9.0, 4.0, 32.0);
         GALE_COIL_BODY_MULTIPLIER = b.comment("盘绕时蛇身碰撞伤害倍率").defineInRange("bodyDamageMultiplier", 0.5, 0.0, 1000.0);
@@ -134,10 +146,11 @@ public final class EotsConfig {
         SCALE_RAIN_RADIUS = b.comment("落点半径").defineInRange("radius", 2.5, 0.5, 16.0);
         b.pop();
 
-        b.comment("吞风吐息：张口吸入扇形区域内的敌人，随后猛烈吐出狂风").push("inhale");
+        b.comment("吞风噬咬（近战）：落到低空张口吸入扇形区域内的敌人，被吸到嘴边的目标遭到咬合，抵抗住吸力的目标遭到吐息").push("inhale");
         INHALE = new SkillConfig(b, 360, 1.3, 9, 2);
         INHALE_PULL = b.comment("吸入牵引强度").defineInRange("pull", 0.07, 0.0, 1.0);
         INHALE_RANGE = b.comment("吸入与吐息距离").defineInRange("range", 20.0, 4.0, 64.0);
+        INHALE_SNAP_RANGE = b.comment("吸入结束时嘴边多少格内有目标就改为咬合").defineInRange("snapRange", 5.0, 1.0, 16.0);
         b.pop();
 
         b.comment("蜕鳞旋风：蛇身震颤蜕下尾鳞，化为追踪玩家的旋风").push("shedTornado");
@@ -146,10 +159,11 @@ public final class EotsConfig {
         SHED_TORNADO_LIFETIME = b.comment("旋风持续时间（tick）").defineInRange("lifetime", 220, 20, 2400);
         b.pop();
 
-        b.comment("风暴坍缩（第三阶段大招）：盘旋成风柱牵引全场，随后从风眼正中俯冲砸地，越靠近中心伤害越高").push("stormCollapse");
+        b.comment("风暴坍缩（第三阶段大招）：盘旋成风柱牵引全场，随后从风眼正中俯冲砸地，越靠近中心伤害越高，砸地后力竭倒地").push("stormCollapse");
         STORM_COLLAPSE = new SkillConfig(b, 700, 2.4, 6, 3);
         STORM_COLLAPSE_RADIUS = b.comment("冲击波半径").defineInRange("radius", 18.0, 4.0, 64.0);
         STORM_COLLAPSE_PULL = b.comment("风柱牵引强度").defineInRange("pull", 0.045, 0.0, 1.0);
+        STORM_COLLAPSE_DOWNED = b.comment("砸地后倒地的时间（tick）").defineInRange("downedTicks", 40, 0, 600);
         b.pop();
 
         SPEC = b.build();

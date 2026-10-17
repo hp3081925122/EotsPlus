@@ -17,25 +17,27 @@ import com.eotsplus.config.EotsConfig;
 import java.util.function.Function;
 
 public enum SkillType {
-    SKY_REND(EotsConfig.SKY_REND, false, SkyRendSkill::new),
-    CHAIN_BITE(EotsConfig.CHAIN_BITE, false, ChainBiteSkill::new),
-    SHATTER_CRYSTAL(EotsConfig.SHATTER_CRYSTAL, false, ShatterCrystalSkill::new),
-    GALE_COIL(EotsConfig.GALE_COIL, true, GaleCoilSkill::new),
-    CRESCENT_BLADE(EotsConfig.CRESCENT_BLADE, false, CrescentBladeSkill::new),
-    SERPENT_TRAIL(EotsConfig.SERPENT_TRAIL, false, SerpentTrailSkill::new),
-    SCALE_RAIN(EotsConfig.SCALE_RAIN, true, ScaleRainSkill::new),
-    INHALE(EotsConfig.INHALE, true, InhaleSkill::new),
-    SHED_TORNADO(EotsConfig.SHED_TORNADO, true, ShedTornadoSkill::new),
-    STORM_COLLAPSE(EotsConfig.STORM_COLLAPSE, true, StormCollapseSkill::new),
-    ROAR(null, true, RoarSkill::new);
+    SKY_REND(EotsConfig.SKY_REND, false, true, SkyRendSkill::new),
+    CHAIN_BITE(EotsConfig.CHAIN_BITE, false, true, ChainBiteSkill::new),
+    SHATTER_CRYSTAL(EotsConfig.SHATTER_CRYSTAL, false, false, ShatterCrystalSkill::new),
+    GALE_COIL(EotsConfig.GALE_COIL, true, true, GaleCoilSkill::new),
+    CRESCENT_BLADE(EotsConfig.CRESCENT_BLADE, false, false, CrescentBladeSkill::new),
+    SERPENT_TRAIL(EotsConfig.SERPENT_TRAIL, false, false, SerpentTrailSkill::new),
+    SCALE_RAIN(EotsConfig.SCALE_RAIN, true, false, ScaleRainSkill::new),
+    INHALE(EotsConfig.INHALE, true, true, InhaleSkill::new),
+    SHED_TORNADO(EotsConfig.SHED_TORNADO, true, false, ShedTornadoSkill::new),
+    STORM_COLLAPSE(EotsConfig.STORM_COLLAPSE, true, true, StormCollapseSkill::new),
+    ROAR(null, true, false, RoarSkill::new);
 
     public final EotsConfig.SkillConfig config;
     public final boolean big;
+    public final boolean melee;
     private final Function<EotsSkillGoal, EotsSkill> factory;
 
-    SkillType(EotsConfig.SkillConfig config, boolean big, Function<EotsSkillGoal, EotsSkill> factory) {
+    SkillType(EotsConfig.SkillConfig config, boolean big, boolean melee, Function<EotsSkillGoal, EotsSkill> factory) {
         this.config = config;
         this.big = big;
+        this.melee = melee;
         this.factory = factory;
     }
 

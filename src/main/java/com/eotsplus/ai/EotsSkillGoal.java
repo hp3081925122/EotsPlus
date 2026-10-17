@@ -2,9 +2,11 @@ package com.eotsplus.ai;
 
 import com.eotsplus.EotsPlus;
 import com.eotsplus.ai.skill.EotsSkill;
+import com.eotsplus.anim.EotsAnim;
 import com.eotsplus.config.EotsConfig;
 import com.eotsplus.duck.EotsSegmentDuck;
 import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -19,6 +21,7 @@ import teamrazor.deepaether.entity.eots.EOTSSegment;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 public class EotsSkillGoal extends Goal {
     public final EOTSSegment seg;
@@ -28,6 +31,7 @@ public class EotsSkillGoal extends Goal {
     private SkillType skillType;
     private int idleTicks;
     private LivingEntity lockedTarget;
+    private int lingerLeft;
 
     public EotsSkillGoal(EOTSSegment seg) {
         this.seg = seg;
@@ -56,8 +60,12 @@ public class EotsSkillGoal extends Goal {
             return false;
         }
         this.idleTicks++;
+        boolean meleeOnly = false;
         if (!this.seg.isAroundIdlePos() && this.idleTicks < 80) {
-            return false;
+            if (!EotsConfig.LOW_MELEE_START.get()) {
+                return false;
+            }
+            meleeOnly = true;
         }
         long now = this.level().getGameTime();
         if (this.brain.activeHeads.size() >= EotsConfig.MAX_SKILL_HEADS.get()) {
@@ -70,7 +78,7 @@ public class EotsSkillGoal extends Goal {
         if (now < this.brain.nextAction) {
             return false;
         }
-        SkillType picked = this.pick(now);
+        SkillType picked = this.pick(now, meleeOnly);
         if (picked == null) {
             return false;
         }
@@ -78,7 +86,7 @@ public class EotsSkillGoal extends Goal {
         return true;
     }
 
-    private SkillType pick(long now) {
+    private SkillType pick(long now, boolean meleeOnly) {
         List<SkillType> pool = new ArrayList<>();
         int total = 0;
         for (SkillType type : SkillType.values()) {
@@ -90,6 +98,9 @@ public class EotsSkillGoal extends Goal {
                 continue;
             }
             if (type.big && this.brain.bigOwner != null) {
+                continue;
+            }
+            if (meleeOnly && !type.melee) {
                 continue;
             }
             pool.add(type);
@@ -112,6 +123,7 @@ public class EotsSkillGoal extends Goal {
     public void start() {
         long now = this.level().getGameTime();
         this.lockedTarget = this.seg.getTarget();
+        this.lingerLeft = 0;
         this.brain.activeHeads.add(this.seg.getUUID());
         if (this.skillType.big) {
             this.brain.bigOwner = this.seg.getUUID();
@@ -127,20 +139,68 @@ public class EotsSkillGoal extends Goal {
         this.seg.setMouthOpen(false);
         this.skill = this.skillType.create(this);
         if (EotsConfig.DEBUG_LOGGING.get()) {
-            EotsPlus.LOGGER.info("[EotsPlus] head {} starts {} (stage {}, active heads {})", this.seg.getId(), this.skillType, this.brain.stage, this.brain.activeHeads.size());
+            EotsPlus.LOGGER.info("[EotsPlus] head {} starts {} (stage {}, active heads {}, low start {})", this.seg.getId(), this.skillType, this.brain.stage, this.brain.activeHeads.size(), !this.seg.isAroundIdlePos());
         }
         this.skill.start();
     }
 
     @Override
     public boolean canContinueToUse() {
-        return this.skill != null && !this.skill.isFinished() && this.seg.isAlive() && this.seg.isControllingSegment() && !this.duck.eotsplus$isDying() && EotsPlus.isEnhanced(this.seg);
+        return this.skill != null && (!this.skill.isFinished() || this.lingerLeft > 0) && this.seg.isAlive() && this.seg.isControllingSegment() && !this.duck.eotsplus$isDying() && EotsPlus.isEnhanced(this.seg);
     }
 
     @Override
     public void tick() {
-        if (this.skill != null && !this.skill.isFinished()) {
+        if (this.skill == null) {
+            return;
+        }
+        if (!this.skill.isFinished()) {
             this.skill.tickSkill();
+            if (this.skill.isFinished() && this.skillType.melee && this.target() != null) {
+                int linger = EotsConfig.MELEE_LINGER.get();
+                if (this.stage() >= 3) {
+                    linger = linger * 3 / 4;
+                }
+                this.lingerLeft = linger;
+                if (linger > 0) {
+                    this.seg.setMouthOpen(false);
+                    this.anim(EotsAnim.PROWL);
+                    if (EotsConfig.DEBUG_LOGGING.get()) {
+                        EotsPlus.LOGGER.info("[EotsPlus] head {} lingers low for {} ticks after {}", this.seg.getId(), linger, this.skillType);
+                    }
+                }
+            }
+            return;
+        }
+        if (this.lingerLeft <= 0) {
+            return;
+        }
+        this.lingerLeft--;
+        LivingEntity t = this.target();
+        if (t == null) {
+            this.lingerLeft = 0;
+            return;
+        }
+        Vec3 head = this.pos();
+        Vec3 flat = new Vec3(head.x - t.getX(), 0, head.z - t.getZ());
+        if (flat.lengthSqr() < 1.0E-4) {
+            flat = new Vec3(-this.look().x, 0, -this.look().z);
+        }
+        if (flat.lengthSqr() < 1.0E-4) {
+            flat = new Vec3(1, 0, 0);
+        }
+        Vec3 spot = t.position().add(flat.normalize().scale(4.0));
+        double floor = EotsCombat.groundY(this.level(), spot.x, Math.max(spot.y, head.y) + 1.0, spot.z);
+        Vec3 diff = new Vec3(spot.x, floor + 1.6, spot.z).subtract(head);
+        double len = diff.length();
+        if (len > 1.0E-4) {
+            this.seg.setDeltaMovement(diff.scale(Math.min(0.3, len) / len));
+        } else {
+            this.hover();
+        }
+        this.turnToward(t.getEyePosition().subtract(head), 10.0F);
+        if (this.lingerLeft % 6 == 0) {
+            this.burst(ParticleTypes.CLOUD, this.mouth(), 2, 0.2, 0.02);
         }
     }
 
@@ -161,11 +221,12 @@ public class EotsSkillGoal extends Goal {
             this.brain.nextAction = now + (long) (EotsConfig.ACTION_INTERVAL.get() * this.brain.cooldownMultiplier());
         }
         this.skill = null;
+        this.lingerLeft = 0;
         this.idleTicks = 0;
         this.duck.eotsplus$setManual(false);
         this.duck.eotsplus$setAttacking(false);
         this.duck.eotsplus$setShouldMove(true);
-        this.duck.eotsplus$playAnim(com.eotsplus.anim.EotsAnim.IDLE);
+        this.duck.eotsplus$playAnim(EotsAnim.IDLE);
         this.seg.setMouthOpen(false);
         this.duck.eotsplus$randomizeIdleOffset();
         this.duck.eotsplus$returnToIdle();
@@ -278,6 +339,44 @@ public class EotsSkillGoal extends Goal {
         if (t != null) {
             this.turnToward(t.getEyePosition().subtract(this.seg.position()), maxDegrees);
         }
+    }
+
+    public double floorBelow(Vec3 p) {
+        return EotsCombat.groundY(this.level(), p.x, p.y + 1.0, p.z);
+    }
+
+    public void holdHeight(Vec3 horizontal, double height) {
+        Vec3 head = this.pos();
+        double vy = Mth.clamp((this.floorBelow(head) + height - head.y) * 0.35, -0.8, 0.8);
+        this.seg.setDeltaMovement(horizontal.x, vy, horizontal.z);
+    }
+
+    public void headSweep(Vec3 base, float progress, double radius, double multiplier, Set<Integer> hit) {
+        double a = Math.atan2(base.z, base.x) + Math.toRadians(-70.0 + 140.0 * progress);
+        Vec3 facing = new Vec3(Math.cos(a), 0, Math.sin(a));
+        Vec3 tangent = new Vec3(-facing.z, 0, facing.x);
+        this.face(facing);
+        Vec3 head = this.pos();
+        for (LivingEntity e : EotsCombat.enemies(this.level(), head, radius + 1.0)) {
+            double dx = e.getX() - head.x;
+            double dz = e.getZ() - head.z;
+            double d = Math.sqrt(dx * dx + dz * dz);
+            if (d > radius || Math.abs(e.getY() - head.y) > 3.0) {
+                continue;
+            }
+            double rel = Mth.wrapDegrees((float) Math.toDegrees(Math.atan2(dz, dx) - a));
+            if (d > 1.5 && Math.abs(rel) > 40.0) {
+                continue;
+            }
+            if (!hit.add(e.getId())) {
+                continue;
+            }
+            EotsCombat.hurt(this.seg, e, multiplier);
+            EotsCombat.push(e, tangent.add(facing.scale(0.5)), 0.7, 0.3);
+        }
+        Vec3 tip = head.add(facing.scale(2.5)).add(0, 0.5, 0);
+        this.level().sendParticles(ParticleTypes.SWEEP_ATTACK, tip.x, tip.y, tip.z, 1, 0, 0, 0, 0);
+        this.particle(ParticleTypes.CLOUD, tip, tangent, 0.3);
     }
 
     public List<LivingEntity> touching(Entity e, double inflate) {
