@@ -32,7 +32,7 @@ public final class EotsPreview {
     @SubscribeEvent
     public static void setup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
-            for (int animation = 0; animation <= 18; animation++) {
+            for (int animation = 0; animation <= 22; animation++) {
                 int selected = animation;
                 PreviewRegistry.register("eotsplus", "animation_" + animation, Component.literal("EOTS animation " + animation), 100,
                         (level, viewer) -> new EntityEffect(level, DAEntities.EOTS_SEGMENT.get(), selected));
