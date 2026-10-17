@@ -31,6 +31,10 @@ public final class EotsFx {
         EotsNetwork.sendNear(level, base.x, base.y, base.z, RANGE, new FxPacket(FxType.COLUMN, base.x, base.y, base.z, 0, 0, 0, radius, height, duration, color));
     }
 
+    public static void beam(ServerLevel level, Vec3 from, Vec3 to, float width, float jitter, int duration, int color) {
+        EotsNetwork.sendNear(level, from.x, from.y, from.z, RANGE, new FxPacket(FxType.BEAM, from.x, from.y, from.z, (float) to.x, (float) to.y, (float) to.z, width, jitter, duration, color));
+    }
+
     public static void shake(ServerLevel level, Vec3 c, float intensity, float radius, int duration) {
         EotsNetwork.sendNear(level, c.x, c.y, c.z, RANGE, new FxPacket(FxType.SHAKE, c.x, c.y, c.z, intensity, 0, 0, radius, 0, duration, 0));
     }
