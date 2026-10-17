@@ -235,6 +235,49 @@ public final class EotsPose {
                 this.bodyRoll = 16.0F * wave;
                 this.finFlare = 0.25F * (0.5F + 0.5F * wave);
             }
+            case EotsAnim.STUCK -> {
+                float k = smooth(t / 3.0F);
+                float struggle = Mth.sin(t * 1.9F);
+                this.headPitch = 0.55F * k + 0.06F * struggle;
+                this.headYaw = 0.12F * Mth.sin(t * 1.3F);
+                this.jaw = 0.55F + 0.15F * Mth.sin(t * 2.4F);
+                this.frill = 0.4F + 0.2F * Math.abs(struggle);
+                this.fin = 0.35F;
+                this.bodyRoll = 10.0F * Mth.sin(t * 0.9F - idx * 0.5F);
+                this.shake = 0.05F * k;
+            }
+            case EotsAnim.SWEEP -> {
+                float swing = smooth(t / 10.0F);
+                float settle = 1.0F - smooth((t - 10.0F) / 8.0F);
+                this.headYaw = (-0.7F + 1.4F * swing) * settle;
+                this.jaw = 0.7F * settle;
+                this.frill = 0.8F * settle;
+                this.fin = -0.3F * settle;
+                this.bodyRoll = (-18.0F + 36.0F * swing) * settle;
+                this.finFlare = 0.4F * settle * (0.5F + 0.5F * Mth.sin(t * 0.8F - idx * 0.5F));
+                this.shake = 0.02F * settle;
+            }
+            case EotsAnim.DOWNED -> {
+                float k = smooth(t / 6.0F);
+                float breathe = Mth.sin(t * 0.25F);
+                this.headPitch = 0.4F * k;
+                this.jaw = 0.25F + 0.1F * breathe;
+                this.frill = -0.45F * k;
+                this.fin = 0.4F * k;
+                this.headScale = 1.0F + 0.03F * breathe;
+                this.bodyScale = 1.0F + 0.04F * Mth.sin(t * 0.25F - idx * 0.4F);
+                this.bodyRoll = 6.0F * Mth.sin(t * 0.18F + idx * 0.3F);
+            }
+            case EotsAnim.PROWL -> {
+                float k = smooth(t / 8.0F);
+                float wave = Mth.sin(t * 0.3F - idx * 0.6F);
+                this.headPitch = 0.12F * k;
+                this.jaw = 0.25F * k + 0.08F * Math.max(0.0F, Mth.sin(t * 0.7F));
+                this.frill = 0.45F * k + 0.08F * Mth.sin(t * 2.8F) * k;
+                this.fin = -0.2F * k;
+                this.headYaw = 0.1F * Mth.sin(t * 0.2F);
+                this.bodyRoll = 8.0F * wave * k;
+            }
             default -> this.active = false;
         }
         if (!this.head) {

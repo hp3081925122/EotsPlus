@@ -80,3 +80,22 @@ $env:JAVA_HOME = 'C:\Users\30819\.jdks\ms-21.0.11'
 - SHA-256：`96fed147b0ec54674a80bab80caeca003e5b8b6d6afa2bc8084053e2673d0d3d`。
 
 本机运行证据保存在 `D:\AI临时文件\EotsPlus`：`final-server-mdg.log`、`capture1201-deterministic/results.json`、`capture1211-deterministic/results.json`、`render-comparison-deterministic.json` 和 `render-pairs-deterministic.png`。截图比较包含 19 种动作状态、4 种实体、5 种独立特效，在第 5、20、45 tick 采样。
+## 近战化改动迁移（来自 1201forge 6ac78ec、5e69c7d 及调试移除）
+
+来源：Forge 1.20.1 分支的“低空起手、近战后游弋、五个近战技能”和“悬空不出招修复”。
+
+| 文件 | 改动内容 | 1.21.1 适配点 |
+| --- | --- | --- |
+| `anim/EotsAnim.java` | 新增 STUCK、SWEEP、DOWNED、PROWL 四个动作 | 无 |
+| `client/anim/EotsPose.java` | 四个新动作的姿态 | Deep Aether 包名 |
+| `config/EotsConfig.java` | meleeLinger、lowMeleeStart、stuckTicks、impactMultiplier、sweepMultiplier、snapRange、downedTicks | `ForgeConfigSpec` 改为 `ModConfigSpec` |
+| `ai/SkillType.java` | 新增 `melee` 标记 | 无 |
+| `ai/EotsSkillGoal.java` | 低空近战起手、近战技能池回退全技能池、近战后低空游弋、残留占用清理、`floorBelow`/`holdHeight`/`headSweep` | Deep Aether 包名 |
+| `ai/skill/SkyRendSkill.java` | 俯冲插地、卡地挣扎、二阶段甩头横扫、空目标保护 | 包名 |
+| `ai/skill/ChainBiteSkill.java` | 贴地接近、低空咬击、收尾横扫 | 包名 |
+| `ai/skill/GaleCoilSkill.java` | 低空盘绕，收尾砸地 | 包名、`GENERIC_EXPLODE.value()` |
+| `ai/skill/InhaleSkill.java` | 低空吸气，近身扑咬或吐息 | 包名、`GENERIC_EXPLODE.value()` |
+| `ai/skill/StormCollapseSkill.java` | 坠地后倒地硬直 | 包名、`GENERIC_EXPLODE.value()` |
+| `ai/skill/SerpentTrailSkill.java` | 收尾不再爬升 | 包名 |
+
+迁移方式：以 1.20.1 当前文件为准完整复制，只替换平台 API，不删减任何状态、特效、伤害或配置项。
