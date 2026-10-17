@@ -30,6 +30,7 @@ public class EotsSkillGoal extends Goal {
     private EotsSkill skill;
     private SkillType skillType;
     private int idleTicks;
+    private long lastReject;
     private LivingEntity lockedTarget;
     private int lingerLeft;
 
@@ -55,20 +56,39 @@ public class EotsSkillGoal extends Goal {
             this.duck.eotsplus$setStage(this.brain.stage);
         }
         LivingEntity target = this.seg.getTarget();
+        long now = this.level().getGameTime();
         if (target == null || !EotsCombat.isValidTarget(target) || target.distanceTo(this.seg) > EotsConfig.COMBAT_RANGE.get()) {
             this.idleTicks = 0;
+            if (target == null) {
+                this.reject(now, "no target");
+            } else {
+                this.reject(now, "target invalid or out of range, distance " + String.format("%.1f", target.distanceTo(this.seg)));
+            }
             return false;
         }
         this.idleTicks++;
         boolean meleeOnly = false;
         if (!this.seg.isAroundIdlePos() && this.idleTicks < 80) {
             if (!EotsConfig.LOW_MELEE_START.get()) {
+                this.reject(now, "not around idle pos, y " + String.format("%.1f", this.seg.getY()) + ", idle y " + this.duck.eotsplus$idleY());
                 return false;
             }
             meleeOnly = true;
         }
-        long now = this.level().getGameTime();
+        ServerLevel level = this.level();
+        boolean leaked = this.brain.activeHeads.removeIf(id -> {
+            Entity e = level.getEntity(id);
+            return e == null || !e.isAlive();
+        });
+        if (this.brain.bigOwner != null && !this.brain.activeHeads.contains(this.brain.bigOwner)) {
+            this.brain.bigOwner = null;
+            leaked = true;
+        }
+        if (leaked && EotsConfig.DEBUG_LOGGING.get()) {
+            EotsPlus.LOGGER.info("[EotsPlus] head {} cleared stale active heads, now {}", this.seg.getId(), this.brain.activeHeads.size());
+        }
         if (this.brain.activeHeads.size() >= EotsConfig.MAX_SKILL_HEADS.get()) {
+            this.reject(now, "active heads full " + this.brain.activeHeads.size());
             return false;
         }
         if (this.brain.pendingRoar > 0 && this.brain.bigOwner == null) {
@@ -76,14 +96,27 @@ public class EotsSkillGoal extends Goal {
             return true;
         }
         if (now < this.brain.nextAction) {
+            this.reject(now, "waiting next action " + (this.brain.nextAction - now) + " ticks");
             return false;
         }
         SkillType picked = this.pick(now, meleeOnly);
+        if (picked == null && meleeOnly) {
+            picked = this.pick(now, false);
+        }
         if (picked == null) {
+            this.reject(now, "no skill ready, big owner " + this.brain.bigOwner + ", melee only " + meleeOnly);
             return false;
         }
         this.skillType = picked;
         return true;
+    }
+
+    private void reject(long now, String reason) {
+        if (!EotsConfig.DEBUG_LOGGING.get() || now - this.lastReject < 40L) {
+            return;
+        }
+        this.lastReject = now;
+        EotsPlus.LOGGER.info("[EotsPlus] head {} idle: {} (idle ticks {}, around idle pos {}, active heads {}, stage {})", this.seg.getId(), reason, this.idleTicks, this.seg.isAroundIdlePos(), this.brain.activeHeads.size(), this.brain.stage);
     }
 
     private SkillType pick(long now, boolean meleeOnly) {
