@@ -30,6 +30,7 @@ public class EotsSkillGoal extends Goal {
     private EotsSkill skill;
     private SkillType skillType;
     private int idleTicks;
+    private int prowlSide = 1;
     private LivingEntity lockedTarget;
     private int lingerLeft;
 
@@ -173,6 +174,10 @@ public class EotsSkillGoal extends Goal {
                     linger = linger * 3 / 4;
                 }
                 this.lingerLeft = linger;
+                this.prowlSide = 1;
+                if (this.seg.getRandom().nextBoolean()) {
+                    this.prowlSide = -1;
+                }
                 if (linger > 0) {
                     this.seg.setMouthOpen(false);
                     this.anim(EotsAnim.PROWL);
@@ -200,16 +205,10 @@ public class EotsSkillGoal extends Goal {
         if (flat.lengthSqr() < 1.0E-4) {
             flat = new Vec3(1, 0, 0);
         }
-        Vec3 spot = t.position().add(flat.normalize().scale(4.0));
+        double angle = Math.atan2(flat.z, flat.x) + 0.7 * this.prowlSide;
+        Vec3 spot = t.position().add(Math.cos(angle) * 5.0, 0, Math.sin(angle) * 5.0);
         double floor = EotsCombat.groundY(this.level(), spot.x, Math.max(spot.y, head.y) + 1.0, spot.z);
-        Vec3 diff = new Vec3(spot.x, floor + 1.6, spot.z).subtract(head);
-        double len = diff.length();
-        if (len > 1.0E-4) {
-            this.seg.setDeltaMovement(diff.scale(Math.min(0.3, len) / len));
-        } else {
-            this.hover();
-        }
-        this.turnToward(t.getEyePosition().subtract(head), 10.0F);
+        this.steerToward(new Vec3(spot.x, floor + 1.6, spot.z), 0.45, 12.0F);
         if (this.lingerLeft % 6 == 0) {
             this.burst(ParticleTypes.CLOUD, this.mouth(), 2, 0.2, 0.02);
         }
