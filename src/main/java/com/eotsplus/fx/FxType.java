@@ -7,6 +7,7 @@ public final class FxType {
     public static final int SHOCKWAVE = 3;
     public static final int COLUMN = 4;
     public static final int SHAKE = 5;
+    public static final int BEAM = 6;
 
     public static final int WIND = 0xA8ECFF;
     public static final int DANGER = 0xE8F8FF;
