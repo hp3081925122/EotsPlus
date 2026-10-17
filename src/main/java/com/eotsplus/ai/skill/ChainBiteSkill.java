@@ -29,6 +29,7 @@ public class ChainBiteSkill extends EotsSkill {
     private Vec3 dir = Vec3.ZERO;
     private Vec3 flat = Vec3.ZERO;
     private boolean landed;
+    private boolean curve;
 
     public ChainBiteSkill(EotsSkillGoal g) {
         super(g);
@@ -55,19 +56,18 @@ public class ChainBiteSkill extends EotsSkill {
                 return;
             }
             Vec3 head = this.g.pos();
-            Vec3 away = new Vec3(head.x - target.getX(), 0, head.z - target.getZ());
-            if (away.lengthSqr() < 1.0E-4) {
-                away = new Vec3(1, 0, 0);
-            }
-            Vec3 spot = target.position().add(away.normalize().scale(3.5));
-            double floor = EotsCombat.groundY(this.g.level(), spot.x, Math.max(spot.y, head.y) + 1.0, spot.z);
-            this.g.steerToward(new Vec3(spot.x, floor + BITE_HEIGHT, spot.z), 1.2, 18.0F);
+            double floor = this.g.floorBelow(target.position());
+            this.g.steerToward(new Vec3(target.getX(), floor + BITE_HEIGHT, target.getZ()), 1.1, 16.0F);
             if (this.st % 3 == 0) {
                 this.g.particle(ParticleTypes.CLOUD, head, this.g.look().scale(-1.0), 0.25);
             }
-            double horiz = Math.sqrt(away.x * away.x + away.z * away.z);
-            boolean low = head.y - floor < BITE_HEIGHT + 2.5;
-            if ((horiz < 6.0 && low) || this.st >= 40) {
+            Vec3 to = new Vec3(target.getX() - head.x, 0, target.getZ() - head.z);
+            double horiz = to.length();
+            Vec3 look = this.g.look();
+            Vec3 lookFlat = new Vec3(look.x, 0, look.z);
+            boolean facing = horiz > 1.0E-4 && lookFlat.lengthSqr() > 1.0E-4 && lookFlat.normalize().dot(to.scale(1.0 / horiz)) > 0.75;
+            boolean low = head.y - this.g.floorBelow(head) < BITE_HEIGHT + 2.5;
+            if ((horiz < 7.0 && horiz > 2.5 && facing && low) || this.st >= 40) {
                 this.g.anim(EotsAnim.BITE_WINDUP);
                 this.g.seg.setMouthOpen(true);
                 this.g.sound(DASounds.EOTS_AMBIENT.get(), 2.0F, 1.4F);
@@ -78,7 +78,7 @@ public class ChainBiteSkill extends EotsSkill {
                 this.g.lookAtTarget(20.0F);
             }
             Vec3 look = this.g.look();
-            this.g.holdHeight(new Vec3(look.x, 0, look.z).scale(-0.12), BITE_HEIGHT);
+            this.g.holdHeight(new Vec3(look.x, 0, look.z).scale(0.15), BITE_HEIGHT + 0.8);
             this.g.burst(ParticleTypes.CLOUD, this.g.mouth(), 1, 0.2, 0.01);
             if (this.st >= this.windup) {
                 Vec3 aim = this.g.look();
@@ -110,12 +110,24 @@ public class ChainBiteSkill extends EotsSkill {
             }
             if (this.landed || this.st >= 6) {
                 this.g.seg.setMouthOpen(false);
+                this.curve = this.g.seg.getRandom().nextBoolean();
                 this.setState(RECOIL);
             }
         } else if (this.state == RECOIL) {
-            this.g.holdHeight(this.flat.scale(-0.4), BITE_HEIGHT);
-            this.g.face(this.flat);
-            if (this.st >= 8) {
+            Vec3 side = new Vec3(-this.flat.z, 0, this.flat.x);
+            if (this.curve) {
+                side = side.scale(-1.0);
+            }
+            Vec3 look = this.g.look();
+            Vec3 lookFlat = new Vec3(look.x, 0, look.z);
+            if (lookFlat.lengthSqr() < 1.0E-4) {
+                lookFlat = this.flat;
+            }
+            this.g.turnToward(lookFlat.normalize().add(side.scale(0.6)), 14.0F);
+            look = this.g.look();
+            double speed = 1.1 - this.st * 0.05;
+            this.g.holdHeight(new Vec3(look.x, 0, look.z).normalize().scale(speed), BITE_HEIGHT);
+            if (this.st >= 10) {
                 this.done++;
                 if (target == null) {
                     this.finish();
@@ -135,9 +147,10 @@ public class ChainBiteSkill extends EotsSkill {
                 }
             }
         } else {
-            this.g.holdHeight(Vec3.ZERO, BITE_HEIGHT);
             float f = Math.min(1.0F, (this.st + 1) / (float) (SWEEP_TICKS - 6));
             this.g.headSweep(this.flat, f, 5.0, EotsConfig.CHAIN_BITE_SWEEP_MULTIPLIER.get(), this.sweepHit);
+            Vec3 look = this.g.look();
+            this.g.holdHeight(new Vec3(look.x, 0, look.z).scale(0.75), BITE_HEIGHT);
             if (this.st >= SWEEP_TICKS) {
                 this.g.seg.setMouthOpen(false);
                 this.finish();
