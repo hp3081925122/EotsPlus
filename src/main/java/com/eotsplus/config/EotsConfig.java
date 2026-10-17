@@ -25,16 +25,15 @@ public final class EotsConfig {
     public static final ModConfigSpec.BooleanValue DEBUG_LOGGING;
     public static final ModConfigSpec.IntValue MELEE_LINGER;
     public static final ModConfigSpec.BooleanValue LOW_MELEE_START;
+    public static final ModConfigSpec.IntValue IDLE_HEIGHT;
+    public static final ModConfigSpec.IntValue IDLE_HEIGHT_RANDOM;
+    public static final ModConfigSpec.DoubleValue HOVER_HEIGHT;
 
     public static final SkillConfig SKY_REND;
     public static final ModConfigSpec.DoubleValue SKY_REND_BODY_MULTIPLIER;
     public static final ModConfigSpec.IntValue SKY_REND_WAKE_DURATION;
     public static final ModConfigSpec.IntValue SKY_REND_STUCK;
     public static final ModConfigSpec.DoubleValue SKY_REND_IMPACT_MULTIPLIER;
-
-    public static final SkillConfig CHAIN_BITE;
-    public static final ModConfigSpec.IntValue CHAIN_BITE_COUNT;
-    public static final ModConfigSpec.DoubleValue CHAIN_BITE_SWEEP_MULTIPLIER;
 
     public static final SkillConfig SHATTER_CRYSTAL;
     public static final ModConfigSpec.DoubleValue SHATTER_SHARD_MULTIPLIER;
@@ -52,17 +51,26 @@ public final class EotsConfig {
     public static final SkillConfig SERPENT_TRAIL;
     public static final ModConfigSpec.IntValue SERPENT_TRAIL_DELAY;
     public static final ModConfigSpec.DoubleValue SERPENT_TRAIL_RADIUS;
-    public static final ModConfigSpec.DoubleValue SERPENT_TRAIL_CONTACT_MULTIPLIER;
 
     public static final SkillConfig SCALE_RAIN;
     public static final ModConfigSpec.IntValue SCALE_RAIN_WAVES;
     public static final ModConfigSpec.IntValue SCALE_RAIN_EXTRA_MARKS;
     public static final ModConfigSpec.DoubleValue SCALE_RAIN_RADIUS;
 
-    public static final SkillConfig INHALE;
-    public static final ModConfigSpec.DoubleValue INHALE_PULL;
-    public static final ModConfigSpec.DoubleValue INHALE_RANGE;
-    public static final ModConfigSpec.DoubleValue INHALE_SNAP_RANGE;
+    public static final SkillConfig GALE_VOLLEY;
+    public static final ModConfigSpec.IntValue GALE_VOLLEY_COUNT;
+    public static final ModConfigSpec.DoubleValue GALE_VOLLEY_HOMING;
+
+    public static final SkillConfig WIND_LANCE;
+    public static final ModConfigSpec.DoubleValue WIND_LANCE_RANGE;
+    public static final ModConfigSpec.DoubleValue WIND_LANCE_SWEEP;
+    public static final ModConfigSpec.IntValue WIND_LANCE_AIM;
+
+    public static final SkillConfig WIND_PRISM;
+    public static final ModConfigSpec.IntValue WIND_PRISM_PILLARS;
+    public static final ModConfigSpec.DoubleValue WIND_PRISM_RADIUS;
+    public static final ModConfigSpec.IntValue WIND_PRISM_WARN;
+    public static final ModConfigSpec.IntValue WIND_PRISM_DURATION;
 
     public static final SkillConfig SHED_TORNADO;
     public static final ModConfigSpec.IntValue SHED_TORNADO_COUNT;
@@ -97,6 +105,9 @@ public final class EotsConfig {
         DEBUG_LOGGING = b.comment("输出调试日志").define("debugLogging", false);
         MELEE_LINGER = b.comment("近战技能结束后蛇头在低空游弋、留给近战输出的时间（tick），第三阶段 ×0.75，0 为立即回到高空").defineInRange("meleeLinger", 30, 0, 600);
         LOW_MELEE_START = b.comment("蛇头不在高空待机位置时是否允许直接接近战技能（不必先飞回高空）").define("lowMeleeStart", true);
+        IDLE_HEIGHT = b.comment("待机悬浮高度：控制器（无控制器时为目标）上方多少格（原版 21，目标为基准时原版 15）").defineInRange("idleHeight", 8, 2, 64);
+        IDLE_HEIGHT_RANDOM = b.comment("待机悬浮高度的随机浮动上限（格，原版 6）").defineInRange("idleHeightRandom", 3, 0, 6);
+        HOVER_HEIGHT = b.comment("近地远程技能释放时蛇头离地高度").defineInRange("hoverHeight", 5.0, 2.0, 20.0);
         b.pop();
 
         b.comment("破空俯冲（近战）：后仰锁定路线俯冲，犁地后蛇头扎入地面形成破绽；第二阶段起拔出时甩头横扫并留下侧向乱流").push("skyRend");
@@ -105,12 +116,6 @@ public final class EotsConfig {
         SKY_REND_WAKE_DURATION = b.comment("乱流尾迹持续时间（tick）").defineInRange("wakeDuration", 60, 0, 1200);
         SKY_REND_STUCK = b.comment("蛇头扎地卡住的时间（tick），第三阶段 ×0.75").defineInRange("stuckTicks", 26, 0, 400);
         SKY_REND_IMPACT_MULTIPLIER = b.comment("扎地冲击与拔出横扫的伤害倍率").defineInRange("impactDamageMultiplier", 0.6, 0.0, 1000.0);
-        b.pop();
-
-        b.comment("连环噬咬（近战）：降到地面高度贴身连咬，最后甩头横扫").push("chainBite");
-        CHAIN_BITE = new SkillConfig(b, 140, 1.0, 12, 1);
-        CHAIN_BITE_COUNT = b.comment("基础咬击次数，第三阶段 +1").defineInRange("count", 3, 1, 10);
-        CHAIN_BITE_SWEEP_MULTIPLIER = b.comment("收尾甩头横扫伤害倍率").defineInRange("sweepDamageMultiplier", 0.8, 0.0, 1000.0);
         b.pop();
 
         b.comment("风晶裂弹：口中汇聚风晶，命中后向四周炸出碎晶").push("shatterCrystal");
@@ -132,11 +137,10 @@ public final class EotsConfig {
         CRESCENT_RANGE = b.comment("风刃飞行距离").defineInRange("range", 14.0, 4.0, 48.0);
         b.pop();
 
-        b.comment("蛇行雷痕：S 形低空掠过目标区域，沿途留下依次引爆的风雷节点").push("serpentTrail");
+        b.comment("蛇行雷痕：S 形低空掠过目标区域，沿途留下依次引爆的风雷节点（掠过本身不造成伤害）").push("serpentTrail");
         SERPENT_TRAIL = new SkillConfig(b, 240, 0.9, 9, 1);
         SERPENT_TRAIL_DELAY = b.comment("节点落下到引爆的延迟（tick），第三阶段 -6").defineInRange("delay", 26, 8, 200);
         SERPENT_TRAIL_RADIUS = b.comment("节点爆炸半径").defineInRange("radius", 2.4, 0.5, 8.0);
-        SERPENT_TRAIL_CONTACT_MULTIPLIER = b.comment("掠过时蛇头撞击伤害倍率").defineInRange("contactMultiplier", 0.6, 0.0, 1000.0);
         b.pop();
 
         b.comment("逆鳞风雨：抬身竖鳞，鳞片升空后砸向地面预警圈").push("scaleRain");
@@ -146,11 +150,25 @@ public final class EotsConfig {
         SCALE_RAIN_RADIUS = b.comment("落点半径").defineInRange("radius", 2.5, 0.5, 16.0);
         b.pop();
 
-        b.comment("吞风噬咬（近战）：落到低空张口吸入扇形区域内的敌人，被吸到嘴边的目标遭到咬合，抵抗住吸力的目标遭到吐息").push("inhale");
-        INHALE = new SkillConfig(b, 360, 1.3, 9, 2);
-        INHALE_PULL = b.comment("吸入牵引强度").defineInRange("pull", 0.07, 0.0, 1.0);
-        INHALE_RANGE = b.comment("吸入与吐息距离").defineInRange("range", 20.0, 4.0, 64.0);
-        INHALE_SNAP_RANGE = b.comment("吸入结束时嘴边多少格内有目标就改为咬合").defineInRange("snapRange", 5.0, 1.0, 16.0);
+        b.comment("风眼连珠：降到近地悬停，侧移中连续吐出追踪风球，命中或到时炸开").push("galeVolley");
+        GALE_VOLLEY = new SkillConfig(b, 200, 0.6, 10, 1);
+        GALE_VOLLEY_COUNT = b.comment("风球数量，第三阶段 +2").defineInRange("count", 5, 1, 20);
+        GALE_VOLLEY_HOMING = b.comment("追踪转向强度（0 为不追踪），距目标 3 格内停止追踪").defineInRange("homing", 0.08, 0.0, 1.0);
+        b.pop();
+
+        b.comment("裂空风矛：近地悬停，地面扇形预警后蓄力，射出贴地横扫的风矛光束").push("windLance");
+        WIND_LANCE = new SkillConfig(b, 240, 1.3, 9, 1);
+        WIND_LANCE_RANGE = b.comment("光束长度").defineInRange("range", 24.0, 6.0, 64.0);
+        WIND_LANCE_SWEEP = b.comment("横扫半角（度）").defineInRange("sweepAngle", 30.0, 0.0, 90.0);
+        WIND_LANCE_AIM = b.comment("预警蓄力时间（tick），第三阶段 ×0.75").defineInRange("aimTicks", 30, 5, 200);
+        b.pop();
+
+        b.comment("风棱阵：在每名玩家周围落下风晶柱，延迟后柱间连电（外圈加星形连线），站在连线上持续受伤").push("windPrism");
+        WIND_PRISM = new SkillConfig(b, 320, 0.45, 8, 2);
+        WIND_PRISM_PILLARS = b.comment("每名玩家周围晶柱数量，第三阶段 +1").defineInRange("pillars", 4, 3, 8);
+        WIND_PRISM_RADIUS = b.comment("晶柱离玩家的距离").defineInRange("radius", 5.0, 2.0, 16.0);
+        WIND_PRISM_WARN = b.comment("落柱到连电的预警时间（tick），第三阶段 ×0.75").defineInRange("warnTicks", 34, 10, 200);
+        WIND_PRISM_DURATION = b.comment("连电持续时间（tick），期间每 10 tick 结算一次伤害").defineInRange("duration", 50, 10, 400);
         b.pop();
 
         b.comment("蜕鳞旋风：蛇身震颤蜕下尾鳞，化为追踪玩家的旋风").push("shedTornado");

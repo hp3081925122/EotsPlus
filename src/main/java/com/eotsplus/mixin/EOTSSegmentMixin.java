@@ -1,5 +1,6 @@
 package com.eotsplus.mixin;
 
+import com.eotsplus.EotsPlus;
 import com.eotsplus.anim.EotsAnim;
 import com.eotsplus.config.EotsConfig;
 import com.eotsplus.duck.EotsSegmentDuck;
@@ -141,6 +142,22 @@ public abstract class EOTSSegmentMixin extends FlyingMob implements EotsSegmentD
             cursor = childOf.get(cursor);
         }
         this.eotsplus$chain = chain;
+    }
+
+    @Inject(method = "getIdleYPos", at = @At("HEAD"), cancellable = true)
+    private void eotsplus$lowerIdle(CallbackInfoReturnable<Integer> cir) {
+        if (!EotsPlus.isEnhanced((EOTSSegment) (Object) this)) {
+            return;
+        }
+        Entity anchor = this.getController();
+        if (anchor == null) {
+            anchor = this.getTarget();
+        }
+        if (anchor == null) {
+            return;
+        }
+        int spread = EotsConfig.IDLE_HEIGHT_RANDOM.get() + 1;
+        cir.setReturnValue(anchor.blockPosition().getY() + EotsConfig.IDLE_HEIGHT.get() + this.randomYOffset % spread);
     }
 
     @Inject(method = "getGlobalSpeedModifier", at = @At("RETURN"), cancellable = true)
