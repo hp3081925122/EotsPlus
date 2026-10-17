@@ -16,8 +16,6 @@ import net.minecraft.world.phys.Vec3;
 import io.github.razordevs.deep_aether.entity.living.boss.eots.EOTSSegment;
 import io.github.razordevs.deep_aether.init.DASounds;
 
-import java.util.HashSet;
-import java.util.Set;
 
 public class SerpentTrailSkill extends EotsSkill {
     private static final int APPROACH = 0;
@@ -27,7 +25,6 @@ public class SerpentTrailSkill extends EotsSkill {
     private static final double AMPLITUDE = 5.0;
     private static final double HEIGHT = 3.0;
 
-    private final Set<Integer> hit = new HashSet<>();
     private Vec3 from = Vec3.ZERO;
     private Vec3 to = Vec3.ZERO;
     private Vec3 dir = Vec3.ZERO;
@@ -120,13 +117,6 @@ public class SerpentTrailSkill extends EotsSkill {
                 float damage = (float) (EotsCombat.attack(this.g.seg) * EotsConfig.SERPENT_TRAIL.damageMultiplier.get());
                 EotsFx.circle(level, ground.add(0, 0.05, 0), (float) radius, this.delay, FxType.STORM);
                 EotsHazards.add(level, new TrailNode(this.g.seg, ground, radius, damage, this.delay));
-            }
-        }
-        double contact = EotsConfig.SERPENT_TRAIL_CONTACT_MULTIPLIER.get();
-        for (LivingEntity e : this.g.touching(this.g.seg, 0.6)) {
-            if (this.hit.add(e.getId())) {
-                EotsCombat.hurt(this.g.seg, e, contact);
-                EotsCombat.push(e, vel, 0.6, 0.25);
             }
         }
         if (this.st >= this.passTicks) {

@@ -73,8 +73,18 @@ public final class FxManager {
                 }
             }
         }
-        ps.popPose();
         buffers.endBatch(FxRenderTypes.FX);
+        VertexConsumer glow = buffers.getBuffer(FxRenderTypes.GLOW);
+        for (Fx fx : ACTIVE) {
+            if (fx.p.kind() != FxType.BEAM) {
+                continue;
+            }
+            float age = fx.age + partial;
+            float fade = Math.min(1.0F, age / 2.0F) * Math.min(1.0F, (fx.p.duration() - age) / 2.0F);
+            drawBeam(glow, m, fx.p, age, Mth.clamp(fade, 0.0F, 1.0F));
+        }
+        ps.popPose();
+        buffers.endBatch(FxRenderTypes.GLOW);
     }
 
     private static void drawCircle(VertexConsumer vc, Matrix4f m, FxPacket f, float age, float p, float fade) {
@@ -199,6 +209,59 @@ public final class FxManager {
         FxDraw.spiral(vc, m, f.x(), f.y(), f.z(), r * 0.9, r * 1.6, h, 4, -0.22, -age * 0.15, 0.8, 48, FxType.WIND, 0.3F * fade);
         FxDraw.wall(vc, m, f.x(), f.y(), f.z(), r * 1.3, h * 0.35, 48, f.color(), 0.2F * fade, 0.0F);
         FxDraw.ring(vc, m, f.x(), f.y() + 0.03, f.z(), r * 0.2, r * 1.3, 48, f.color(), 0.0F, 0.35F * fade);
+    }
+
+    private static void drawBeam(VertexConsumer vc, Matrix4f m, FxPacket f, float age, float fade) {
+        Vec3 from = new Vec3(f.x(), f.y(), f.z());
+        Vec3 to = new Vec3(f.a(), f.b(), f.c());
+        Vec3 axis = to.subtract(from);
+        double len = axis.length();
+        if (len < 1.0E-3) {
+            return;
+        }
+        Vec3 dir = axis.scale(1.0 / len);
+        Vec3 side = dir.cross(new Vec3(0, 1, 0));
+        if (side.lengthSqr() < 1.0E-4) {
+            side = new Vec3(1, 0, 0);
+        }
+        side = side.normalize();
+        Vec3 up = side.cross(dir).normalize();
+        double width = f.radius();
+        double jitter = f.extra();
+        int steps = Math.max(1, (int) (len / 1.2));
+        if (jitter <= 0.0) {
+            steps = 1;
+        }
+        int frame = (int) (age * 0.6F);
+        Vec3 prev = from;
+        for (int i = 1; i <= steps; i++) {
+            double t = i / (double) steps;
+            Vec3 next = from.add(axis.scale(t));
+            if (jitter > 0.0 && i < steps) {
+                double ox = hash(frame * 131 + i * 17) * jitter;
+                double oy = hash(frame * 71 + i * 29 + 5) * jitter;
+                next = next.add(side.scale(ox)).add(up.scale(oy));
+            }
+            drawBeamPiece(vc, m, prev, next, side, up, width * 1.8, f.color(), 0.22F * fade);
+            drawBeamPiece(vc, m, prev, next, side, up, width, f.color(), 0.6F * fade);
+            drawBeamPiece(vc, m, prev, next, side, up, width * 0.35, 0xFFFFFF, 0.9F * fade);
+            prev = next;
+        }
+    }
+
+    private static void drawBeamPiece(VertexConsumer vc, Matrix4f m, Vec3 a, Vec3 b, Vec3 side, Vec3 up, double half, int color, float alpha) {
+        Vec3 s = side.scale(half);
+        Vec3 u = up.scale(half);
+        FxDraw.quad(vc, m, new double[]{a.x + s.x, a.y + s.y, a.z + s.z}, new double[]{b.x + s.x, b.y + s.y, b.z + s.z}, new double[]{b.x - s.x, b.y - s.y, b.z - s.z}, new double[]{a.x - s.x, a.y - s.y, a.z - s.z}, color, alpha);
+        FxDraw.quad(vc, m, new double[]{a.x + u.x, a.y + u.y, a.z + u.z}, new double[]{b.x + u.x, b.y + u.y, b.z + u.z}, new double[]{b.x - u.x, b.y - u.y, b.z - u.z}, new double[]{a.x - u.x, a.y - u.y, a.z - u.z}, color, alpha);
+    }
+
+    private static double hash(int n) {
+        int x = n * 0x27D4EB2D;
+        x ^= x >>> 15;
+        x *= 0x85EBCA6B;
+        x ^= x >>> 13;
+        return ((x & 0xFFFF) / 65535.0) * 2.0 - 1.0;
     }
 
     private static final class Fx {

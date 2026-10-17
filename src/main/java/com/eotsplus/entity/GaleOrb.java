@@ -22,6 +22,8 @@ public class GaleOrb extends Projectile {
     private float damage;
     private float shardDamage;
     private int shardCount = 8;
+    private LivingEntity homingTarget;
+    private double homing;
 
     public GaleOrb(EntityType<? extends GaleOrb> type, Level level) {
         super(type, level);
@@ -39,6 +41,19 @@ public class GaleOrb extends Projectile {
         return orb;
     }
 
+    public static GaleOrb spawnHoming(Level level, Entity owner, Vec3 pos, Vec3 velocity, float damage, LivingEntity target, double homing) {
+        GaleOrb orb = new GaleOrb(EotsEntities.GALE_ORB.get(), level);
+        orb.setOwner(owner);
+        orb.setPos(pos);
+        orb.setDeltaMovement(velocity);
+        orb.damage = damage;
+        orb.shardCount = 0;
+        orb.homingTarget = target;
+        orb.homing = homing;
+        level.addFreshEntity(orb);
+        return orb;
+    }
+
     @Override
     protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
     }
@@ -47,6 +62,20 @@ public class GaleOrb extends Projectile {
     public void tick() {
         super.tick();
         Vec3 vel = this.getDeltaMovement();
+        if (!this.level().isClientSide() && this.homing > 0.0 && this.homingTarget != null && this.homingTarget.isAlive()) {
+            Vec3 aim = this.homingTarget.position().add(0, this.homingTarget.getBbHeight() * 0.5, 0).subtract(this.position());
+            double speed = vel.length();
+            if (aim.lengthSqr() > 9.0 && speed > 1.0E-4) {
+                Vec3 steered = vel.normalize().add(aim.normalize().subtract(vel.normalize()).scale(this.homing));
+                if (steered.lengthSqr() > 1.0E-6) {
+                    vel = steered.normalize().scale(speed);
+                    this.setDeltaMovement(vel);
+                    this.hasImpulse = true;
+                }
+            } else {
+                this.homingTarget = null;
+            }
+        }
         if (!this.level().isClientSide()) {
             HitResult hit = ProjectileUtil.getHitResultOnMoveVector(this, this::canHitEntity);
             if (hit.getType() != HitResult.Type.MISS && !EventHooks.onProjectileImpact(this, hit)) {
@@ -74,7 +103,11 @@ public class GaleOrb extends Projectile {
         ServerLevel level = (ServerLevel) this.level();
         Vec3 c = this.position();
         Entity owner = this.getOwner();
-        for (LivingEntity e : EotsCombat.enemies(level, c, 2.8)) {
+        double blast = 2.8;
+        if (this.shardCount <= 0) {
+            blast = 2.0;
+        }
+        for (LivingEntity e : EotsCombat.enemies(level, c, blast)) {
             EotsCombat.hurtIndirect(this, owner, e, this.damage);
             EotsCombat.push(e, e.position().subtract(c), 0.6, 0.3);
         }
@@ -88,7 +121,7 @@ public class GaleOrb extends Projectile {
         level.sendParticles(ParticleTypes.SNOWFLAKE, c.x, c.y, c.z, 30, 0.5, 0.5, 0.5, 0.3);
         level.playSound(null, c.x, c.y, c.z, SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.HOSTILE, 2.0F, 0.7F);
         level.playSound(null, c.x, c.y, c.z, SoundEvents.GLASS_BREAK, SoundSource.HOSTILE, 1.5F, 0.6F);
-        EotsFx.shockwave(level, c, 3.5F, 10, FxType.WIND);
+        EotsFx.shockwave(level, c, (float) blast + 0.7F, 10, FxType.WIND);
         this.discard();
     }
 
@@ -105,7 +138,7 @@ public class GaleOrb extends Projectile {
         super.readAdditionalSaveData(tag);
         this.damage = tag.getFloat("Damage");
         this.shardDamage = tag.getFloat("ShardDamage");
-        this.shardCount = Math.max(1, tag.getInt("ShardCount"));
+        this.shardCount = Math.max(0, tag.getInt("ShardCount"));
     }
 
     @Override
