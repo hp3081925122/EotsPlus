@@ -137,7 +137,7 @@ public class SerpentTrailSkill extends EotsSkill {
     }
 
     private void tickRecover() {
-        this.g.fly(this.dir.scale(0.8).add(0, 0.6, 0));
+        this.g.fly(this.dir.scale(0.8));
         if (this.st >= 14) {
             this.finish();
         }

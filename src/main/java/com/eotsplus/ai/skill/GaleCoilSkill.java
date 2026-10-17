@@ -23,7 +23,8 @@ public class GaleCoilSkill extends EotsSkill {
     private static final int APPROACH = 0;
     private static final int CIRCLE = 1;
     private static final int CONSTRICT = 2;
-    private static final int RECOVER = 3;
+    private static final int SLAM = 3;
+    private static final int SLAM_TICKS = 8;
     private static final int CONSTRICT_TICKS = 20;
     private static final double INNER_RADIUS = 2.5;
     private static final double BLAST_RADIUS = 4.5;
@@ -55,7 +56,7 @@ public class GaleCoilSkill extends EotsSkill {
             this.circleTicks = 44;
         }
         this.center = EotsCombat.onGround(this.g.level(), target.position());
-        this.ringY = this.center.y + 2.5;
+        this.ringY = this.center.y + 1.2;
         this.g.sound(DASounds.EOTS_AMBIENT.get(), 3.0F, 0.9F);
         this.setState(APPROACH);
     }
@@ -69,7 +70,7 @@ public class GaleCoilSkill extends EotsSkill {
         } else if (this.state == CONSTRICT) {
             this.tickConstrict();
         } else {
-            this.tickRecover();
+            this.tickSlam();
         }
     }
 
@@ -139,10 +140,9 @@ public class GaleCoilSkill extends EotsSkill {
         }
         this.bodyHits();
         if (this.st >= CONSTRICT_TICKS) {
-            this.blast();
-            this.g.anim(EotsAnim.IDLE);
-            this.g.seg.setMouthOpen(false);
-            this.setState(RECOVER);
+            this.g.anim(EotsAnim.BITE_WINDUP);
+            this.g.sound(DASounds.EOTS_AMBIENT.get(), 3.0F, 0.8F);
+            this.setState(SLAM);
         }
     }
 
@@ -191,14 +191,16 @@ public class GaleCoilSkill extends EotsSkill {
         }
     }
 
-    private void tickRecover() {
-        Vec3 out = this.g.pos().subtract(this.center);
-        Vec3 flat = new Vec3(out.x, 0, out.z);
-        if (flat.lengthSqr() < 1.0E-4) {
-            flat = this.g.look();
-        }
-        this.g.fly(new Vec3(flat.x, 0, flat.z).normalize().scale(0.6).add(0, 0.8, 0));
-        if (this.st >= 14) {
+    private void tickSlam() {
+        Vec3 point = this.center.add(0, 0.8, 0);
+        double dist = this.g.pos().distanceTo(point);
+        this.g.flyToward(point, 1.4);
+        this.bodyHits();
+        if (dist < 1.2 || this.st >= SLAM_TICKS) {
+            this.g.seg.setDeltaMovement(Vec3.ZERO);
+            this.blast();
+            this.g.anim(EotsAnim.BITE_SNAP);
+            this.g.seg.setMouthOpen(false);
             this.finish();
         }
     }

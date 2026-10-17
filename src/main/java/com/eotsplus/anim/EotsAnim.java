@@ -20,6 +20,10 @@ public final class EotsAnim {
     public static final int BLADE_WINDUP = 16;
     public static final int BLADE_THROW = 17;
     public static final int SERPENT = 18;
+    public static final int STUCK = 19;
+    public static final int SWEEP = 20;
+    public static final int DOWNED = 21;
+    public static final int PROWL = 22;
 
     private EotsAnim() {
     }

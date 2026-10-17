@@ -19,7 +19,7 @@ public class StormCollapseSkill extends EotsSkill {
     private static final int SPIRAL = 1;
     private static final int ALIGN = 2;
     private static final int DIVE = 3;
-    private static final int RECOVER = 4;
+    private static final int DOWNED = 4;
     private static final int SPIRAL_TICKS = 70;
     private static final double SPIRAL_RADIUS = 5.5;
 
@@ -29,6 +29,7 @@ public class StormCollapseSkill extends EotsSkill {
     private double topY;
     private double radius;
     private double angle;
+    private Vec3 restPos = Vec3.ZERO;
 
     public StormCollapseSkill(EotsSkillGoal g) {
         super(g);
@@ -105,15 +106,25 @@ public class StormCollapseSkill extends EotsSkill {
             Vec3 v = new Vec3((this.center.x - pos.x) * 0.25, -2.2, (this.center.z - pos.z) * 0.25);
             this.g.fly(v);
             this.g.particle(ParticleTypes.CLOUD, pos, new Vec3(0, 1, 0), 0.5);
-            if (pos.y <= this.floorY + 1.5 || this.st >= 25) {
+            if (pos.y <= this.floorY + 1.5 || this.g.seg.verticalCollision || this.st >= 25) {
                 this.impact();
                 this.g.seg.setMouthOpen(false);
-                this.g.anim(EotsAnim.IDLE);
-                this.setState(RECOVER);
+                this.g.seg.setDeltaMovement(Vec3.ZERO);
+                this.restPos = new Vec3(pos.x, Math.max(pos.y, this.floorY + 0.5), pos.z);
+                this.g.anim(EotsAnim.DOWNED);
+                this.setState(DOWNED);
             }
         } else {
-            this.g.fly(new Vec3(0, 0.9, 0));
-            if (this.st >= 30) {
+            this.g.seg.setDeltaMovement(this.restPos.subtract(this.g.pos()).scale(0.4));
+            if (this.st % 8 == 0) {
+                Vec3 p = this.restPos;
+                level.sendParticles(ParticleTypes.CLOUD, p.x, this.floorY + 0.3, p.z, 6, 1.2, 0.1, 1.2, 0.02);
+            }
+            if (this.st == 0) {
+                this.g.sound(DASounds.EOTS_HURT.get(), 3.0F, 0.5F);
+            }
+            if (this.st >= EotsConfig.STORM_COLLAPSE_DOWNED.get()) {
+                this.g.sound(DASounds.EOTS_AMBIENT.get(), 2.5F, 0.8F);
                 this.finish();
             }
         }

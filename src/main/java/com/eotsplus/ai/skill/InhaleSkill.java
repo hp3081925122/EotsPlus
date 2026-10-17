@@ -12,11 +12,18 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import teamrazor.deepaether.init.DASounds;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class InhaleSkill extends EotsSkill {
     private static final int POSITION = 0;
     private static final int INHALE = 1;
     private static final int EXHALE = 2;
     private static final int RECOVER = 3;
+    private static final int SNAP = 4;
+    private static final double LOW_HEIGHT = 2.0;
+    private final Set<Integer> snapHit = new HashSet<>();
+    private LivingEntity prey;
     private static final double HALF_ANGLE = 35.0;
 
     private int inhale;
@@ -60,7 +67,9 @@ public class InhaleSkill extends EotsSkill {
             if (flat.lengthSqr() < 1.0E-3) {
                 flat = new Vec3(1, 0, 0);
             }
-            Vec3 spot = target.position().add(flat.normalize().scale(10.0)).add(0, 4.0, 0);
+            Vec3 side = target.position().add(flat.normalize().scale(7.0));
+            double floor = EotsCombat.groundY(this.g.level(), side.x, Math.max(side.y, this.g.pos().y) + 1.0, side.z);
+            Vec3 spot = new Vec3(side.x, floor + LOW_HEIGHT, side.z);
             this.g.steerToward(spot, 0.9, 14.0F);
             if (this.g.pos().distanceTo(spot) < 2.0 || this.st >= 30) {
                 this.g.anim(EotsAnim.INHALE);
@@ -71,7 +80,7 @@ public class InhaleSkill extends EotsSkill {
                 this.setState(INHALE);
             }
         } else if (this.state == INHALE) {
-            this.g.hover();
+            this.g.holdHeight(this.g.seg.getDeltaMovement().scale(0.6), LOW_HEIGHT);
             this.g.lookAtTarget(3.0F);
             Vec3 mouth = this.g.mouth();
             Vec3 dir = this.g.look();
@@ -92,9 +101,54 @@ public class InhaleSkill extends EotsSkill {
             }
             if (this.st >= this.inhale) {
                 this.exhaleDir = this.g.look();
-                this.g.anim(EotsAnim.EXHALE);
-                this.blast();
-                this.setState(EXHALE);
+                double snapRange = EotsConfig.INHALE_SNAP_RANGE.get();
+                double best = snapRange;
+                this.prey = null;
+                for (LivingEntity e : EotsCombat.enemies(this.g.level(), mouth, snapRange)) {
+                    double d = e.position().add(0, e.getBbHeight() * 0.5, 0).distanceTo(mouth);
+                    if (d <= best) {
+                        best = d;
+                        this.prey = e;
+                    }
+                }
+                if (this.prey != null) {
+                    this.g.anim(EotsAnim.BITE_SNAP);
+                    this.g.sound(SoundEvents.EVOKER_FANGS_ATTACK, 2.5F, 0.5F);
+                    this.g.sound(DASounds.EOTS_SHOOT.get(), 2.5F, 1.1F);
+                    EotsFx.shake(this.g.level(), mouth, 0.4F, 16.0F, 8);
+                    this.setState(SNAP);
+                } else {
+                    this.g.anim(EotsAnim.EXHALE);
+                    this.blast();
+                    this.setState(EXHALE);
+                }
+            }
+        } else if (this.state == SNAP) {
+            Vec3 aim = this.exhaleDir;
+            if (this.prey != null && this.prey.isAlive()) {
+                aim = this.prey.position().add(0, this.prey.getBbHeight() * 0.5, 0).subtract(this.g.pos());
+            }
+            if (aim.lengthSqr() > 1.0E-4) {
+                aim = aim.normalize();
+            }
+            this.g.fly(aim.scale(1.2));
+            Vec3 mouth = this.g.mouth();
+            for (LivingEntity e : EotsCombat.enemies(this.g.level(), mouth, 3.0)) {
+                if (this.snapHit.add(e.getId())) {
+                    EotsCombat.hurt(this.g.seg, e, EotsConfig.INHALE.damageMultiplier.get());
+                    EotsCombat.push(e, e.position().subtract(this.g.pos()), 0.5, 0.3);
+                    this.g.burst(ParticleTypes.CRIT, e.position().add(0, e.getBbHeight() * 0.5, 0), 10, 0.3, 0.2);
+                }
+            }
+            if (this.st >= 5) {
+                this.exhaleDir = new Vec3(aim.x, 0, aim.z);
+                if (this.exhaleDir.lengthSqr() < 1.0E-4) {
+                    this.exhaleDir = new Vec3(1, 0, 0);
+                }
+                this.exhaleDir = this.exhaleDir.normalize();
+                this.g.seg.setMouthOpen(false);
+                this.g.anim(EotsAnim.IDLE);
+                this.setState(RECOVER);
             }
         } else if (this.state == EXHALE) {
             this.g.seg.setDeltaMovement(this.exhaleDir.scale(-0.08));
@@ -116,7 +170,7 @@ public class InhaleSkill extends EotsSkill {
                 this.setState(RECOVER);
             }
         } else {
-            this.g.fly(this.exhaleDir.scale(-0.3).add(0, 0.6, 0));
+            this.g.holdHeight(new Vec3(this.exhaleDir.x, 0, this.exhaleDir.z).scale(-0.2), LOW_HEIGHT);
             this.g.face(this.exhaleDir);
             if (this.st >= 10) {
                 this.finish();
