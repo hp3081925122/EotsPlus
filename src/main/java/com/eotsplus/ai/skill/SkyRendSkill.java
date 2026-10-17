@@ -78,7 +78,7 @@ public class SkyRendSkill extends EotsSkill {
 
     private void tickWindup() {
         LivingEntity target = this.g.target();
-        if (target == null && this.st < this.windup - 8) {
+        if (target == null && this.st <= this.windup - 8) {
             this.finish();
             return;
         }
