@@ -1,12 +1,14 @@
 package com.eotsplus.mixin;
 
 import com.eotsplus.EotsPlus;
+import com.eotsplus.ai.EotsSharedInvulnerability;
 import com.eotsplus.anim.EotsAnim;
 import com.eotsplus.config.EotsConfig;
 import com.eotsplus.duck.EotsSegmentDuck;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.FlyingMob;
@@ -58,6 +60,8 @@ public abstract class EOTSSegmentMixin extends FlyingMob implements EotsSegmentD
     private boolean eotsplus$chainDirty = true;
     @Unique
     private List<EOTSSegment> eotsplus$chain = new ArrayList<>();
+    @Unique
+    private boolean eotsplus$sharedHurt;
 
     protected EOTSSegmentMixin(EntityType<? extends FlyingMob> type, Level level) {
         super(type, level);
@@ -87,6 +91,68 @@ public abstract class EOTSSegmentMixin extends FlyingMob implements EotsSegmentD
         builder.define(EOTSPLUS$ANIM, 0);
         builder.define(EOTSPLUS$STAGE, (byte) 1);
         builder.define(EOTSPLUS$CHAIN_INDEX, 0);
+    }
+
+    @Inject(method = "hurt", at = @At("HEAD"), cancellable = true, remap = true)
+    private void eotsplus$invulnerability(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        if (this.eotsplus$sharedHurt || amount <= 0.0F) {
+            return;
+        }
+        EOTSController controller = this.getController();
+        if (controller == null || !EotsPlus.isEnhanced((EOTSSegment) (Object) this)) {
+            return;
+        }
+        boolean guard = EotsSharedInvulnerability.guards(source);
+        boolean shared = EotsSharedInvulnerability.shares(source);
+        if (!guard && !shared) {
+            return;
+        }
+        long now = this.level().getGameTime();
+        if (guard && EotsSharedInvulnerability.guarded(controller, source, now)) {
+            if (EotsConfig.DEBUG_LOGGING.get()) {
+                EotsPlus.LOGGER.info("[EotsPlus] independent i-frame blocked {} damage on segment {} ({})", amount, this.getId(), source.getMsgId());
+            }
+            cir.setReturnValue(false);
+            return;
+        }
+        EotsSharedInvulnerability.Hit active = shared ? EotsSharedInvulnerability.active(controller, source, now) : null;
+        float applied = amount;
+        if (active != null) {
+            if (amount <= active.lastHurt()) {
+                if (EotsConfig.DEBUG_LOGGING.get()) {
+                    EotsPlus.LOGGER.info("[EotsPlus] shared i-frame blocked {} damage on segment {} (window max {})", amount, this.getId(), active.lastHurt());
+                }
+                cir.setReturnValue(false);
+                return;
+            }
+            applied = amount - active.lastHurt();
+        }
+        int oldInvulnerable = this.invulnerableTime;
+        float oldLastHurt = this.lastHurt;
+        if (shared) {
+            this.invulnerableTime = active != null ? 20 : 0;
+            this.lastHurt = 0.0F;
+        }
+        boolean result;
+        this.eotsplus$sharedHurt = true;
+        try {
+            result = this.hurt(source, applied);
+        } finally {
+            this.eotsplus$sharedHurt = false;
+        }
+        if (shared && (active != null || !result)) {
+            this.invulnerableTime = oldInvulnerable;
+            this.lastHurt = oldLastHurt;
+        }
+        if (result) {
+            if (shared) {
+                EotsSharedInvulnerability.record(controller, source, active, amount, now);
+            }
+            if (guard) {
+                EotsSharedInvulnerability.guard(controller, source, now);
+            }
+        }
+        cir.setReturnValue(result);
     }
 
     @Inject(method = "tick", at = @At("TAIL"), remap = true)
