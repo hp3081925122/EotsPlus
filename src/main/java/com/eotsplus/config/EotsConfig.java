@@ -28,6 +28,9 @@ public final class EotsConfig {
     public static final ForgeConfigSpec.IntValue IDLE_HEIGHT;
     public static final ForgeConfigSpec.IntValue IDLE_HEIGHT_RANDOM;
     public static final ForgeConfigSpec.DoubleValue HOVER_HEIGHT;
+    public static final ForgeConfigSpec.BooleanValue SHARED_INVULNERABILITY;
+    public static final ForgeConfigSpec.IntValue SHARED_INVULNERABILITY_TICKS;
+    public static final ForgeConfigSpec.IntValue INDEPENDENT_INVULNERABILITY_TICKS;
 
     public static final SkillConfig SKY_REND;
     public static final ForgeConfigSpec.DoubleValue SKY_REND_BODY_MULTIPLIER;
@@ -108,6 +111,9 @@ public final class EotsConfig {
         IDLE_HEIGHT = b.comment("待机悬浮高度：控制器（无控制器时为目标）上方多少格（原版 21，目标为基准时原版 15）").defineInRange("idleHeight", 8, 2, 64);
         IDLE_HEIGHT_RANDOM = b.comment("待机悬浮高度的随机浮动上限（格，原版 6）").defineInRange("idleHeightRandom", 3, 0, 6);
         HOVER_HEIGHT = b.comment("近地远程技能释放时蛇头离地高度").defineInRange("hoverHeight", 5.0, 2.0, 20.0);
+        SHARED_INVULNERABILITY = b.comment("同一控制器下的节段按攻击者共用一份无敌帧：同一攻击者的范围攻击同时打中多节只结算一次，不同攻击者互不影响；不影响 /kill、虚空等无视无敌的伤害和没有控制器的节段链").define("sharedInvulnerability", true);
+        SHARED_INVULNERABILITY_TICKS = b.comment("共用无敌帧时长（tick，原版 10），期间同一攻击者只有更高的伤害才会结算，且只扣差值").defineInRange("sharedInvulnerabilityTicks", 10, 1, 200);
+        INDEPENDENT_INVULNERABILITY_TICKS = b.comment("独立无敌帧（tick），0 为关闭：同一控制器下某攻击者的伤害结算后，该攻击者在这段时间内对任意节段的后续伤害一律无效，不比较伤害高低，也不受清空无敌时间、bypasses_cooldown 等无视无敌帧手段影响；不同攻击者互不影响，/kill 与虚空伤害不受限制").defineInRange("independentInvulnerabilityTicks", 0, 0, 200);
         b.pop();
 
         b.comment("破空俯冲（近战）：后仰锁定路线俯冲，犁地后蛇头扎入地面形成破绽；第二阶段起拔出时甩头横扫并留下侧向乱流").push("skyRend");
